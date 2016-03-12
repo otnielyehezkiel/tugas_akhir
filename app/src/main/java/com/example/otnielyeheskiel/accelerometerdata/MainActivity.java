@@ -14,7 +14,25 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
@@ -48,6 +66,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float accelerometers[]=new float[3];
 
     private TextView currentX, currentY, currentZ, maxX, maxY, maxZ, lon,lat,tv_timestamp;
+    private Button sentBtn;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
@@ -55,9 +74,14 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected Location location;
     private boolean isGPS;
     private boolean isNetwork;
-    private boolean isPermission=true;
+    private boolean isSent=false;
 
-    public float latitude, longitude;
+    private float latitude, longitude;
+
+    final String URL = "http://128.199.235.115/api/accelerometer";
+
+    private int x = 1;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -131,7 +155,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 }
             }
         } catch (Exception e) {
-            Log.d("location",e.getMessage());// lets the user know there is a problem with the gps
+            Log.d("location",e.getMessage());// lets the user know there is a problem with the gps           zz
         }
     }
 
@@ -161,6 +185,16 @@ public class MainActivity extends Activity implements SensorEventListener {
         lat = (TextView) findViewById(R.id.lat);
 
         tv_timestamp = (TextView) findViewById(R.id.tv_timestamp);
+
+        sentBtn = (Button) findViewById(R.id.btn_sent);
+        sentBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(!isSent){
+                    isSent = true;
+                }
+                else isSent = false;
+            }
+        });
     }
 
     //onResume() register the accelerometer for listening the events
@@ -219,6 +253,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         deltaY = (float)(Math.cos(alpha)*aY-Math.sin(alpha)*aZ);
         deltaZ = (float) (-(Math.sin(beta)*deltaX)+(Math.cos(beta)*Math.sin(alpha)*deltaY)+Math.cos(beta)*Math.cos(alpha)*aZ);
         // if the change is below 2, it is just plain noise
+        if(isSent && x==1) {
+//            makeJsonObjReq();
+//            postData();
+            postJsonData();
+            x--;
+        }
         if (deltaX < 0.01)
             deltaX = 0;
         if (deltaY < 0.01)
@@ -263,5 +303,115 @@ public class MainActivity extends Activity implements SensorEventListener {
         lon.setText(Float.toString(longitude));
     }
 
+  /*  private void makeJsonObjReq() {
 
+        final String URL = "http://128.199.235.115/api/accelerometer";
+        // Post params to be sent to the server
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("lat", Float.toString(latitude));
+        params.put("lon", Float.toString(longitude));
+        params.put("z", Float.toString(deltaZ));
+        params.put("waktu", Long.toString(timestamp));
+        params.put("id_user", "1");
+
+        JsonObjectRequest req = new JsonObjectRequest(URL, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        // add the request object to the queue to be executed
+
+        ApplicationController.getInstance().addToRequestQueue(req);
+    }
+*/
+/*    public void postData(){
+        mPostDataResponse.requestStarted();
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        StringRequest sr = new StringRequest(Request.Method.POST,"http://128.199.235.115/api/accelerometer", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                mPostDataResponse.requestCompleted();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                mPostDataResponse.requestEndedWithError(error);
+            }
+        }){
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("lat", Float.toString(latitude));
+                params.put("lon", Float.toString(longitude));
+                params.put("z", Float.toString(deltaZ));
+                params.put("waktu", Long.toString(timestamp));
+                params.put("id_user", "1");
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("Content-Type","application/x-www-form-urlencoded");
+                return params;
+            }
+        };
+        queue.add(sr);
+    }
+
+    public interface PostDataResponseListener {
+        public void requestStarted();
+        public void requestCompleted();
+        public void requestEndedWithError(VolleyError error);
+    }*/
+
+    public void postJsonData(){
+        Map<String,String> params = new HashMap<String, String>();
+        params.put("lat",'\"'+ Float.toString(latitude)+'\"');
+        params.put("lon", '\"'+Float.toString(longitude)+'\"');
+        params.put("z", '\"'+Float.toString(deltaZ)+'\"');
+        params.put("waktu",'\"'+ Long.toString(timestamp)+'\"');
+        params.put("id_user", '\"'+"1"+'\"');
+
+       /* if(!params.isEmpty()){
+            for(String name: params.keySet()){
+                String key = name.toString();
+                String value = params.get(name).toString();
+                Log.d("params",key +" "+value);
+            }
+        }*/
+        if(!params.isEmpty()) {
+            RequestQueue requestQueue = Volley.newRequestQueue(this);
+            CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, URL, params,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            String x = response.toString();
+                            Log.d("response", x);
+                            System.out.println(response);
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d("volley: ", error.toString());
+                        }
+                    });
+
+            requestQueue.add(jsObjRequest);
+        }
+    }
 }

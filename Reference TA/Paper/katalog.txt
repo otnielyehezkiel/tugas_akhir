@@ -1,0 +1,17 @@
+1. A mobile application for road surface quality control: UNIquALroad
+2. Automated sensing system for monitoring of road surface quality by mobile devices
+3. Road Condition Detection Using Smartphone Sensors: A Survey
+4. Wolverine : Traffic and Road Condition Estimation using Smartphone Sensors
+5. Real Time Pothole Detection using Android Smartphones with Accelerometers
+6. Road Condition Monitoring Using On-board Three-axis Accelerometer and GPS Sensor
+7. Automatic and real-time Pothole detection and Traffic monitoring system using Smartphone Technology
+8. Automated sensing system for monitoring of road surface quality by mobile devices
+9. Pothole Detection System using Machine Learning on Android
+10. Real Time Pothole Detection using Android Smartphones with Accelerometers (ppt)
+11. Nericell: Rich Monitoring of Road and Traffic Conditions using Mobile Smartphones
+12. The Pothole Patrol: Using a Mobile Sensor Network for Road Surface Monitoring
+13. Road-quality classification and bump detection with bicycle-mounted smartphones
+14. Road safety performance assessment: a new road network Risk Index for info mobility
+15. Speed prediction models for sustainable road safety management
+16. Nericell: Rich Monitoring of Road and Traffic Conditions using Mobile Smart-phones (ppt)
+17. BY THE PEOPLE, FOR THE PEOPLE: THE CROWDSOURCING OF “STREETBUMP”, AN AUTOMATIC POTHOLE MAPPING APP
