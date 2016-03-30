@@ -2,6 +2,7 @@ package com.example.otnielyeheskiel.accelerometerdata;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -17,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -25,12 +27,14 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,8 +69,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float gravities[]=new float[3];
     private float accelerometers[]=new float[3];
 
-    private TextView currentX, currentY, currentZ, maxX, maxY, maxZ, lon,lat,tv_timestamp;
-    private Button sentBtn;
+    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp;
+    private Button sentBtn,holeBtn,bumpBtn;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
@@ -80,8 +84,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     final String URL = "http://128.199.235.115/api/accelerometer";
 
-    private int x = 1;
-
+    private int x = 1;//1 sent biasa 2 hole 3 bump
+    private ArrayList dataAcc;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,7 +98,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         //sensor function
         sensorFunc();
-
+        dataAcc = new ArrayList();
 
 
     }
@@ -177,24 +181,58 @@ public class MainActivity extends Activity implements SensorEventListener {
         currentY = (TextView) findViewById(R.id.currentY);
         currentZ = (TextView) findViewById(R.id.currentZ);
 
-        maxX = (TextView) findViewById(R.id.maxX);
-        maxY = (TextView) findViewById(R.id.maxY);
-        maxZ = (TextView) findViewById(R.id.maxZ);
-
         lon = (TextView) findViewById(R.id.lon);
         lat = (TextView) findViewById(R.id.lat);
 
+
         tv_timestamp = (TextView) findViewById(R.id.tv_timestamp);
+        status = (TextView) findViewById(R.id.tv_status);
 
         sentBtn = (Button) findViewById(R.id.btn_sent);
+        holeBtn = (Button) findViewById(R.id.btn_hole);
+        bumpBtn = (Button) findViewById(R.id.btn_bump);
+
         sentBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(!isSent){
                     isSent = true;
+                    x=1;
+                    status.setText("Sent Biasa");
                 }
-                else isSent = false;
+                else {
+                    isSent = false;
+                    status.setText("Not Sent");
+                }
             }
         });
+        holeBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(!isSent){
+                    isSent = true;
+                    x=2;
+                    status.setText("Hole");
+                }
+                else {
+                    isSent = false;
+                    status.setText("Not Sent");
+                }
+            }
+        });
+        bumpBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(!isSent){
+                    isSent = true;
+                    x=3;
+                    status.setText("Bump");
+                }
+                else {
+                    isSent = false;
+                    status.setText("Not Sent");
+                }
+            }
+        });
+
+
     }
 
     //onResume() register the accelerometer for listening the events
@@ -231,33 +269,40 @@ public class MainActivity extends Activity implements SensorEventListener {
         Log.d("timestamp",Long.toString(timestamp));
 
         // clean current values
-        displayCleanValues();
+        //displayCleanValues();
         // display the current x,y,z accelerometer values
         displayCurrentValues();
         // display the max x,y,z accelerometer values
-        displayMaxValues();
+       // displayMaxValues();
 
         // get the x,y,z values of the accelerometer
         gravities[0] = alfa * gravities[0] + (1 - alfa) * accelerometers[0];
         gravities[1] = alfa * gravities[1] + (1 - alfa) * accelerometers[1];
         gravities[2] = alfa * gravities[2] + (1 - alfa) * accelerometers[2];
-        aX = event.values[0] - gravities[0];
-        aY = event.values[1] - gravities[1];
-        aZ = event.values[2] - gravities[2];
+        aX = event.values[0];
+        aY = event.values[1];
+        aZ = event.values[2];
 
         alpha= Math.atan2(aY,aZ);
-        beta = Math.atan2((-aX),(Math.hypot(aY,aZ)));
+        beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
         // reorientation
         deltaX =(float) ((Math.cos(beta)*aX) + (Math.sin(beta)*Math.sin(alpha)*aY) +
                 (Math.cos(alpha)*Math.sin(beta)*aZ));
         deltaY = (float)(Math.cos(alpha)*aY-Math.sin(alpha)*aZ);
         deltaZ = (float) (-(Math.sin(beta)*deltaX)+(Math.cos(beta)*Math.sin(alpha)*deltaY)+Math.cos(beta)*Math.cos(alpha)*aZ);
+
+        //AccelData data = new AccelData(timestamp,deltaZ,latitude,longitude,1);
+        //dataAcc.add(data);
         // if the change is below 2, it is just plain noise
-        if(isSent && x==1) {
+        if(isSent) {
 //            makeJsonObjReq();
 //            postData();
-            postJsonData();
-            x--;
+//            postJsonData();
+            try {
+                postAccelData();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         if (deltaX < 0.01)
             deltaX = 0;
@@ -266,11 +311,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     }
 
-    public void displayCleanValues() {
+   /* public void displayCleanValues() {
         currentX.setText("0.0");
         currentY.setText("0.0");
         currentZ.setText("0.0");
-    }
+    }*/
 
     // display the current x,y,z accelerometer values
     public void displayCurrentValues() {
@@ -282,6 +327,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
 
     // display the max x,y,z accelerometer values
+/*
     public void displayMaxValues() {
         if (deltaX > deltaXMax) {
             deltaXMax = deltaX;
@@ -296,6 +342,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             maxZ.setText(Float.toString(deltaZMax));
         }
     }
+*/
 
     //display latitude, longitude
     public void displayLocation(){
@@ -378,7 +425,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         public void requestEndedWithError(VolleyError error);
     }*/
 
-    public void postJsonData(){
+   /* public void postJsonData(){
         Map<String,String> params = new HashMap<String, String>();
         params.put("lat",'\"'+ Float.toString(latitude)+'\"');
         params.put("lon", '\"'+Float.toString(longitude)+'\"');
@@ -386,13 +433,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         params.put("waktu",'\"'+ Long.toString(timestamp)+'\"');
         params.put("id_user", '\"'+"1"+'\"');
 
-       /* if(!params.isEmpty()){
+        if(!params.isEmpty()){
             for(String name: params.keySet()){
                 String key = name.toString();
-                String value = params.get(name).toString();
+            String value = params.get(name).toString();
                 Log.d("params",key +" "+value);
             }
-        }*/
+        }
         if(!params.isEmpty()) {
             RequestQueue requestQueue = Volley.newRequestQueue(this);
             CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, URL, params,
@@ -413,5 +460,75 @@ public class MainActivity extends Activity implements SensorEventListener {
 
             requestQueue.add(jsObjRequest);
         }
+    }*/
+
+    /*private void loadAPI(){
+
+        Map<String,String> params = new HashMap<String, String>();
+        params.put("lat", Float.toString(latitude));
+        params.put("lon", Float.toString(longitude));
+        params.put("z", Float.toString(deltaZ));
+        params.put("waktu", Long.toString(timestamp));
+        params.put("id_user", "1");
+
+        // Request with API parameters
+        GsonRequest<AccelData> myReq = new GsonRequest<AccelData>(
+                com.android.volley.Request.Method.POST,
+                URL,
+                AccelData.class,
+                params,
+                createMyReqSuccessListener(),
+                createMyReqErrorListener());
+
+
+        ApplicationController.getInstance().addToRequestQueue(myReq, "json");
+    }
+
+    private Response.Listener<AccelData> createMyReqSuccessListener() {
+        return new Response.Listener<AccelData>() {
+            @Override
+            public void onResponse(AccelData response) {
+                try {
+                    Log.d("Json Response", response.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            };
+        };
+    }
+
+    private Response.ErrorListener createMyReqErrorListener() {
+        return new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("volley: ", error.toString());
+            }
+        };
+    }*/
+
+    public void postAccelData() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("lat", Float.toString(latitude));
+        obj.put("lon", Float.toString(longitude));
+        obj.put("z", Float.toString(deltaZ));
+        obj.put("waktu", Long.toString(timestamp));
+        obj.put("id_user", "1");
+        obj.put("status",Integer.toString(x));
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL,obj,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        String x = response.toString();
+                        Log.d("response", x);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("volley: ", error.toString());
+                    }
+                });
+        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
     }
 }
