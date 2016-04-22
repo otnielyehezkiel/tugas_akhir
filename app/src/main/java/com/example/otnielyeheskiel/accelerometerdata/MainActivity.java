@@ -19,7 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.example.otnielyeheskiel.accelerometerdata.Statistics;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -36,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,14 +49,14 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Sensor accelerometer;
     private Sensor gravity;
     private long timestamp;
-
+    private long pastTime;
 
     private double alpha;
     private double beta;
 
-    private float deltaX = 0;
-    private float deltaY = 0;
-    private float deltaZ = 0;
+    private float axisX = 0;
+    private float axisY = 0;
+    private float axisZ = 0;
 
     private float aX = 0;
     private float aY = 0;
@@ -73,7 +74,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float accelerometers[]=new float[3];
 
     private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data;
-    private Button sentBtn,holeBtn,bumpBtn,breakBtn,orieantationBtn,modeBtn,sentarrayBtn;
+    private Button sentBtn, holeBtn, bumpBtn, breakBtn ,orieantationBtn, modeBtn, sentarrayBtn, autoBtn;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
@@ -84,15 +85,21 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean isSent=false;
     private boolean isRealTime = true; //using volley jsonObject or jsonArray
     private boolean isReorientation = true;
+    private boolean isAuto = false;
+    private boolean isBump = false;
+    private boolean isHole = false;
+    private boolean isContinue = true;
     private int countData = 0;
     private float latitude, longitude;
+    private int id_user=4;
 
     final String URL = "http://128.199.235.115/api/accelerometer";
     final String URL2 = "http://128.199.235.115/api/array";
 
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
-
+    public Array stdData;
+    private long t=0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,8 +113,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         //sensor function
         sensorFunc();
         dataAcc = new JSONArray();
-
-
     }
 
     public void locationFunc(){
@@ -176,7 +181,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success!
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
             Log.d("sensor","accelerometer success");
         } else {
             Log.d("sensor","accelerometer failed");
@@ -202,12 +207,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         bumpBtn = (Button) findViewById(R.id.btn_bump);
         breakBtn = (Button) findViewById(R.id.btn_break);
         orieantationBtn = (Button) findViewById(R.id.btn_reorientation);
+        autoBtn = (Button) findViewById(R.id.btn_automode);
         modeBtn = (Button) findViewById(R.id.btn_mode);
         sentarrayBtn = (Button) findViewById(R.id.btn_sent_array);
         sentarrayBtn.setVisibility(View.INVISIBLE);
         tv_mode.setText("ON");
     }
-    // Initialize Button funtion
+
     public void initializeButton(){
         modeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,7 +238,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if(!isRealTime){
                     try {
                         postArrayData();
-                        dataAcc = new JSONArray(); //clear JSON array
                         countData = 0;
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -308,12 +313,26 @@ public class MainActivity extends Activity implements SensorEventListener {
                 }
             }
         });
+        autoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isAuto){
+                    isAuto = false;
+                    autoBtn.setText("AUTO");
+                }
+                else{
+                    isAuto = true;
+                    autoBtn.setText("Manual");
+                    status.setText("Auto");
+                }
+            }
+        });
 
     }
     //onResume() register the accelerometer for listening the events
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     //onPause() unregister the accelerometer for stop listening the events
@@ -329,6 +348,54 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    public void eventDetection(){
+        if(isBump && ((timestamp - t) < 2000) && !isContinue){
+            addObject(3,axisZ,timestamp);
+        }
+        else if(isBump){
+            isBump = false;
+            isContinue = true;
+            status.setText("NORMAL");
+            try {
+                postArrayData();
+                dataAcc = new JSONArray(); // clear data
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(isHole && ((timestamp - t) < 2000) && !isContinue){
+            addObject(2,axisZ,timestamp);
+        }
+        else if(isHole){
+            isHole = false;
+            isContinue = true;
+            status.setText("NORMAL");
+            try {
+                postArrayData();
+                dataAcc = new JSONArray(); // clear data
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void addObject(int jenis_id, Float z, Long time){
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("lat", Float.toString(latitude));
+            obj.put("lon", Float.toString(longitude));
+            obj.put("z", Float.toString(z));
+            obj.put("waktu", Long.toString(time));
+            obj.put("id_user", 4);
+            obj.put("jenis_id",jenis_id);
+            dataAcc.put(obj);
+            countData++;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -349,84 +416,111 @@ public class MainActivity extends Activity implements SensorEventListener {
         aY = accelerometers[1];
         aZ = accelerometers[2];
 
-        alpha= Math.atan2(aY,aZ);
-        beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
-        // reorientation
-        if(isReorientation) {
-            deltaX = (float) ((Math.cos(beta) * aX) + (Math.sin(beta) * Math.sin(alpha) * aY) +
+        if(isAuto){
+            alpha= Math.atan2(aY,aZ);
+            beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
+            axisX = (float) ((Math.cos(beta) * aX) + (Math.sin(beta) * Math.sin(alpha) * aY) +
                     (Math.cos(alpha) * Math.sin(beta) * aZ));
-            deltaY = (float) (Math.cos(alpha) * aY - Math.sin(alpha) * aZ);
-            deltaZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);
-            aX = deltaX;
-            aY = deltaY;
-            aZ = deltaZ;
-            //deltaX -= pastX;
-//            deltaY -= pastY;
-//            deltaZ -= pastZ;
-            /*Filter */
-            if((deltaX >= -1) && (deltaX <=1)) deltaX = 0;
-            if((deltaY >= -1) && (deltaY <=1)) deltaY = 0;
-            if((deltaZ >= -1) && (deltaZ <=1)) deltaZ = 0;
-            Log.d("sensor Reor ",String.format("%.4f", deltaX)+" " +
-                                String.format("%.4f", deltaY)+" "+
-                                String.format("%.4f", deltaZ));
+            axisY = (float) (Math.cos(alpha) * aY - Math.sin(alpha) * aZ);
+            axisZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);
+            aX = axisX;
+            aY = axisY;
+            aZ = axisZ;
+
+            eventDetection();
+
+            if((axisZ > 15 || axisZ < 5 ) && isContinue){
+                if( (pastZ - axisZ) < 0 ){
+                    isBump = true;
+                    isContinue = false;
+                    t = timestamp;
+                    countData = 0;
+                    status.setText("BUMP ");
+                    addObject(3,pastZ,pastTime);
+                    addObject(3,axisZ,timestamp);
+                }
+                else{
+                    isHole = true;
+                    isContinue = false;
+                    t = timestamp;
+                    countData = 0;
+                    status.setText("HOLE ");
+                    addObject(2,pastZ,pastTime);
+                    addObject(2,axisZ,timestamp);
+                }
+            }
+            //sent when detect event
+
+            pastX = aX;
+            pastY = aY;
+            pastZ = aZ;
+            pastTime = timestamp;
         }
         else{
-            /*deltaX = aX - pastX;
-            deltaY = aY - pastY;
-            deltaZ = aZ - pastZ;*/
-            deltaX = aX;
-            deltaY = aY;
-            deltaZ = aZ;
+            // reorientation
+            if(isReorientation){
+                alpha= Math.atan2(aY,aZ);
+                beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
+                axisX = (float) ((Math.cos(beta) * aX) + (Math.sin(beta) * Math.sin(alpha) * aY) +
+                        (Math.cos(alpha) * Math.sin(beta) * aZ));
+                axisY = (float) (Math.cos(alpha) * aY - Math.sin(alpha) * aZ);
+                axisZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);
+                aX = axisX;
+                aY = axisY;
+                aZ = axisZ;
+                //axisX -= pastX;
+//            axisY -= pastY;
+//            axisZ -= pastZ;
             /*Filter */
-            if((deltaX >= -1) && (deltaX <=1)) deltaX = 0;
-            if((deltaY >= -1) && (deltaY <=1)) deltaY = 0;
-            if((deltaZ >= -1) && (deltaZ <=1)) deltaZ = 0;
-            Log.d("sensor Orie ",String.format("%.4f", deltaX)+" " +
-                    String.format("%.4f", deltaY)+" "+
-                    String.format("%.4f", deltaZ));
-        }
-        pastX = aX;
-        pastY = aY;
-        pastZ = aZ;
+                if((axisX >= -1) && (axisX <=1)) axisX = 0;
+                if((axisY >= -1) && (axisY <=1)) axisY = 0;
+                if((axisZ >= -1) && (axisZ <=1)) axisZ = 0;
+                Log.d("sensor Reor ",String.format("%.4f", axisX)+" " +
+                        String.format("%.4f", axisY)+" "+
+                        String.format("%.4f", axisZ));
+            }
+            else{
+            /*axisX = aX - pastX;
+            axisY = aY - pastY;
+            axisZ = aZ - pastZ;*/
+                axisX = aX;
+                axisY = aY;
+                axisZ = aZ;
+            /*Filter */
+                if((axisX >= -1) && (axisX <=1)) axisX = 0;
+                if((axisY >= -1) && (axisY <=1)) axisY = 0;
+                if((axisZ >= -1) && (axisZ <=1)) axisZ = 0;
+                Log.d("sensor Orie ",String.format("%.4f", axisX)+" " +
+                        String.format("%.4f", axisY)+" "+
+                        String.format("%.4f", axisZ));
+            }
+            pastX = aX;
+            pastY = aY;
+            pastZ = aZ;
 
-        //AccelData data = new AccelData(timestamp,deltaZ,latitude,longitude,1);
-        //dataAcc.add(data);
+            //AccelData data = new AccelData(timestamp,axisZ,latitude,longitude,1);
+            //dataAcc.add(data);
 
-        if(isSent) {
-            if(isRealTime) {
-                try {
-                    postAccelData();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("lat", Float.toString(latitude));
-                    obj.put("lon", Float.toString(longitude));
-                    obj.put("z", Float.toString(deltaZ));
-                    obj.put("waktu", Long.toString(timestamp));
-                    obj.put("id_user", "2");
-                    obj.put("jenis_id",Integer.toString(x));
-                    dataAcc.put(obj);
+            if(isSent) {
+                if(isRealTime) {
+                    try {
+                        postAccelData();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    addObject(x,axisZ,timestamp);
                     countData++;
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
         }
+
         displayCurrentValues();
     }
     /*Method Post RealTime Data Accelerometer*/
     public void postAccelData() throws JSONException {
         JSONObject obj = new JSONObject();
-        obj.put("lat", Float.toString(latitude));
-        obj.put("lon", Float.toString(longitude));
-        obj.put("z", Float.toString(deltaZ));
-        obj.put("waktu", Long.toString(timestamp));
-        obj.put("id_user", "2");
-        obj.put("jenis_id",Integer.toString(x));
+        addObject(x,axisZ,timestamp);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL,obj,
                 new Response.Listener<JSONObject>() {
@@ -450,8 +544,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
     }
     /*Method Post Data JsonArray Accelerometer*/
-    public void postArrayData() throws JSONException{
-        JsonArrayRequest jsArrRequest = new JsonArrayRequest(Request.Method.POST,URL2,dataAcc,
+    public void postArrayData() throws JSONException {
+        JsonArrayRequest jsArrRequest = new JsonArrayRequest(Request.Method.POST, URL2, dataAcc,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
@@ -472,201 +566,20 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
         ApplicationController.getInstance().addToRequestQueue(jsArrRequest);
     }
-
-   /* public void displayCleanValues() {
-        currentX.setText("0.0");
-        currentY.setText("0.0");
-        currentZ.setText("0.0");
-    }*/
-
     // display the current x,y,z accelerometer values
     public void displayCurrentValues() {
-        currentX.setText(String.format("%.4f", deltaX));
-        currentY.setText(String.format("%.4f", deltaY));
-        currentZ.setText(String.format("%.4f", deltaZ));
+        currentX.setText(String.format("%.5f", axisX));
+        currentY.setText(String.format("%.5f", axisY));
+        currentZ.setText(String.format("%.5f", axisZ));
         tv_timestamp.setText(Long.toString(timestamp));
         tv_data.setText(Integer.toString(countData));
     }
-
-    // display the max x,y,z accelerometer values
-/*
-    public void displayMaxValues() {
-        if (deltaX > deltaXMax) {
-            deltaXMax = deltaX;
-            maxX.setText(Float.toString(deltaXMax));
-        }
-        if (deltaZ < deltaYMax) {
-            deltaYMax = deltaZ;
-            maxY.setText(Float.toString(deltaYMax));
-        }
-        if (deltaZ > deltaZMax) {
-            deltaZMax = deltaZ;
-            maxZ.setText(Float.toString(deltaZMax));
-        }
-    }
-*/
-
     //display latitude, longitude
     public void displayLocation(){
         lat.setText(Float.toString(latitude));
         lon.setText(Float.toString(longitude));
     }
 
-  /*  private void makeJsonObjReq() {
-
-        final String URL = "http://128.199.235.115/api/accelerometer";
-        // Post params to be sent to the server
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("lat", Float.toString(latitude));
-        params.put("lon", Float.toString(longitude));
-        params.put("z", Float.toString(deltaZ));
-        params.put("waktu", Long.toString(timestamp));
-        params.put("id_user", "1");
-
-        JsonObjectRequest req = new JsonObjectRequest(URL, new JSONObject(params),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            VolleyLog.v("Response:%n %s", response.toString(4));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-            }
-        });
-
-        // add the request object to the queue to be executed
-
-        ApplicationController.getInstance().addToRequestQueue(req);
-    }
-*/
-/*    public void postData(){
-        mPostDataResponse.requestStarted();
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        StringRequest sr = new StringRequest(Request.Method.POST,"http://128.199.235.115/api/accelerometer", new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                mPostDataResponse.requestCompleted();
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                mPostDataResponse.requestEndedWithError(error);
-            }
-        }){
-            @Override
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("lat", Float.toString(latitude));
-                params.put("lon", Float.toString(longitude));
-                params.put("z", Float.toString(deltaZ));
-                params.put("waktu", Long.toString(timestamp));
-                params.put("id_user", "1");
-                return params;
-            }
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("Content-Type","application/x-www-form-urlencoded");
-                return params;
-            }
-        };
-        queue.add(sr);
-    }
-
-    public interface PostDataResponseListener {
-        public void requestStarted();
-        public void requestCompleted();
-        public void requestEndedWithError(VolleyError error);
-    }*/
-
-   /* public void postJsonData(){
-        Map<String,String> params = new HashMap<String, String>();
-        params.put("lat",'\"'+ Float.toString(latitude)+'\"');
-        params.put("lon", '\"'+Float.toString(longitude)+'\"');
-        params.put("z", '\"'+Float.toString(deltaZ)+'\"');
-        params.put("waktu",'\"'+ Long.toString(timestamp)+'\"');
-        params.put("id_user", '\"'+"1"+'\"');
-
-        if(!params.isEmpty()){
-            for(String name: params.keySet()){
-                String key = name.toString();
-            String value = params.get(name).toString();
-                Log.d("params",key +" "+value);
-            }
-        }
-        if(!params.isEmpty()) {
-            RequestQueue requestQueue = Volley.newRequestQueue(this);
-            CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, URL, params,
-                    new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            String x = response.toString();
-                            Log.d("response", x);
-                            System.out.println(response);
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.d("volley: ", error.toString());
-                        }
-                    });
-
-            requestQueue.add(jsObjRequest);
-        }
-    }*/
-
-    /*private void loadAPI(){
-
-        Map<String,String> params = new HashMap<String, String>();
-        params.put("lat", Float.toString(latitude));
-        params.put("lon", Float.toString(longitude));
-        params.put("z", Float.toString(deltaZ));
-        params.put("waktu", Long.toString(timestamp));
-        params.put("id_user", "1");
-
-        // Request with API parameters
-        GsonRequest<AccelData> myReq = new GsonRequest<AccelData>(
-                com.android.volley.Request.Method.POST,
-                URL,
-                AccelData.class,
-                params,
-                createMyReqSuccessListener(),
-                createMyReqErrorListener());
-
-
-        ApplicationController.getInstance().addToRequestQueue(myReq, "json");
-    }
-
-    private Response.Listener<AccelData> createMyReqSuccessListener() {
-        return new Response.Listener<AccelData>() {
-            @Override
-            public void onResponse(AccelData response) {
-                try {
-                    Log.d("Json Response", response.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            };
-        };
-    }
-
-    private Response.ErrorListener createMyReqErrorListener() {
-        return new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d("volley: ", error.toString());
-            }
-        };
-    }*/
 
 
 }

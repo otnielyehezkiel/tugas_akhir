@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:textSize="20dp" />
+        android:textSize="16dp" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -262,6 +262,12 @@
             android:layout_height="wrap_content"
             android:text="Orientation"
             android:layout_gravity="right|bottom"/>
+        <Button
+            android:id="@+id/btn_automode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Auto"
+            android:layout_gravity="left|bottom"/>
     </FrameLayout>
 
 </LinearLayout>
