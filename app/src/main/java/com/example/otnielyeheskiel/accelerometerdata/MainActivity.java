@@ -92,9 +92,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     private int countData = 0;
     private float latitude, longitude;
     private int id_user=4;
+    private int last_id;
 
     final String URL = "http://128.199.235.115/api/accelerometer";
     final String URL2 = "http://128.199.235.115/api/array";
+    final String URL3 = "http://128.199.235.115/api/id_block";
+    final String URL4 = "http://128.199.235.115/api/location";
 
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
@@ -113,6 +116,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         //sensor function
         sensorFunc();
         dataAcc = new JSONArray();
+        try {
+            getLastId();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void locationFunc(){
@@ -239,10 +247,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     try {
                         postArrayData();
                         countData = 0;
+                        dataAcc = new JSONArray();
+                        getLastId();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
                 }
             }
         });
@@ -265,6 +274,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     isSent = true;
                     x=2;
                     status.setText("Hole");
+                    try {
+                        postLocation(x);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else {
                     isSent = false;
@@ -278,6 +292,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     isSent = true;
                     x=3;
                     status.setText("Bump");
+                    try {
+                        postLocation(x);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else {
                     isSent = false;
@@ -292,6 +311,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     isSent = true;
                     x=4;
                     status.setText("Break");
+                    try {
+                        postLocation(x);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else {
                     isSent = false;
@@ -306,6 +330,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if(isReorientation){
                     isReorientation = false;
                     orieantationBtn.setText("REORIENTATION");
+                    Context context = getApplicationContext();
+                    CharSequence text = Integer.toString(last_id);
+                    int duration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
+
                 }
                 else {
                     isReorientation = true;
@@ -361,6 +392,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             try {
                 postArrayData();
                 dataAcc = new JSONArray(); // clear data
+                getLastId();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -376,6 +408,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             try {
                 postArrayData();
                 dataAcc = new JSONArray(); // clear data
+                getLastId();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -391,6 +424,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             obj.put("waktu", Long.toString(time));
             obj.put("id_user", 4);
             obj.put("jenis_id",jenis_id);
+            obj.put("block_id",last_id+1);
             dataAcc.put(obj);
             countData++;
         } catch (JSONException e) {
@@ -438,6 +472,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     status.setText("BUMP ");
                     addObject(3,pastZ,pastTime);
                     addObject(3,axisZ,timestamp);
+                    try {
+                        postLocation(3);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else{
                     isHole = true;
@@ -447,6 +486,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     status.setText("HOLE ");
                     addObject(2,pastZ,pastTime);
                     addObject(2,axisZ,timestamp);
+                    try {
+                        postLocation(2);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             //sent when detect event
@@ -566,6 +610,60 @@ public class MainActivity extends Activity implements SensorEventListener {
                 });
         ApplicationController.getInstance().addToRequestQueue(jsArrRequest);
     }
+    /*Method Post Location*/
+    public void postLocation(int jenis_id) throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("lat", Float.toString(latitude));
+        obj.put("lon", Float.toString(longitude));
+        obj.put("jenis_id",jenis_id);
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL4,obj,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d("response", response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("volley: ", error.toString());
+                    }
+                });
+        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
+
+    }
+    /*Method Get last_id*/
+    public void getLastId() throws JSONException{
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, URL3, null,
+            new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    // display response
+                    Log.d("response", response.toString());
+                    try {
+                        last_id = response.getInt("max");
+                        Context context = getApplicationContext();
+                        CharSequence text = response.toString();
+                        int duration = Toast.LENGTH_SHORT;
+
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.d("volley:", error.toString());
+                }
+            });
+        ApplicationController.getInstance().addToRequestQueue(getRequest);
+    }
+
     // display the current x,y,z accelerometer values
     public void displayCurrentValues() {
         currentX.setText(String.format("%.5f", axisX));
