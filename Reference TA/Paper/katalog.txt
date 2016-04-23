@@ -15,3 +15,5 @@
 15. Speed prediction models for sustainable road safety management
 16. Nericell: Rich Monitoring of Road and Traffic Conditions using Mobile Smart-phones (ppt)
 17. BY THE PEOPLE, FOR THE PEOPLE: THE CROWDSOURCING OF “STREETBUMP”, AN AUTOMATIC POTHOLE MAPPING APP
+18. Towards Vehicular Sensor Networks with Android Smartphones for Road Surface Monitoring
+19. Automatic Road Anomaly Detection Using Smart Mobile Device
