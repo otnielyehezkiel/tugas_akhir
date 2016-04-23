@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -108,6 +109,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         initializeViews();
         initializeButton();
         //Location Function
@@ -189,7 +191,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success!
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
             Log.d("sensor","accelerometer success");
         } else {
             Log.d("sensor","accelerometer failed");
@@ -275,7 +277,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     x=2;
                     status.setText("Hole");
                     try {
-                        postLocation(x);
+                        postLocation(2);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -293,7 +295,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     x=3;
                     status.setText("Bump");
                     try {
-                        postLocation(x);
+                        postLocation(3);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -312,7 +314,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     x=4;
                     status.setText("Break");
                     try {
-                        postLocation(x);
+                        postLocation(4);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -363,7 +365,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     //onResume() register the accelerometer for listening the events
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
     }
 
     //onPause() unregister the accelerometer for stop listening the events
@@ -392,7 +394,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             try {
                 postArrayData();
                 dataAcc = new JSONArray(); // clear data
-                getLastId();
+                last_id++;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -408,7 +410,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             try {
                 postArrayData();
                 dataAcc = new JSONArray(); // clear data
-                getLastId();
+                last_id++;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -677,7 +679,4 @@ public class MainActivity extends Activity implements SensorEventListener {
         lat.setText(Float.toString(latitude));
         lon.setText(Float.toString(longitude));
     }
-
-
-
 }
