@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.otnielyeheskiel.accelerometerdata.Statistics;
@@ -49,8 +50,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor gravity;
+    private Sensor magnometer;
     private long timestamp;
     private long pastTime;
+    private long timeLocation;
+    private long pTimeLocation=0;
+    private double max=16.5,min=3.5;
 
     private double alpha;
     private double beta;
@@ -67,15 +72,20 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float pastY = 0;
     private float pastZ = 0;
 
+    private double speed;
+
     private double temp;
 
     private final float alfa = (float) 0.8;
 
     private float gravities[]=new float[3];
-    private float accelerometers[]=new float[3];
-
-    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data;
-    private Button sentBtn, holeBtn, bumpBtn, breakBtn ,orieantationBtn, modeBtn, sentarrayBtn, autoBtn;
+    private float accelerometers[]=new float[5];
+    private float magnometers[]=new float[3];
+    private float Rotation[] =new float[16];
+    private float earth_acc[] =new float[3];
+    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data,tv_speed,tv_maxmin;
+    private Button sentBtn, holeBtn, bumpBtn, breakBtn ,orieantationBtn, modeBtn, sentarrayBtn, autoBtn,setBtn;
+    private EditText etMintresh, etMaxtresh;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
@@ -91,8 +101,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean isHole = false;
     private boolean isContinue = true;
     private int countData = 0;
-    private float latitude, longitude;
-    private int id_user=4;
+    private float latitude, longitude,plat,plon;
+    private int id_user=6;
     private int last_id;
 
     final String URL = "http://128.199.235.115/api/accelerometer";
@@ -138,8 +148,13 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void onLocationChanged(Location location) {
                 latitude = (float) location.getLatitude();
                 longitude =(float)  location.getLongitude();
+                timeLocation = System.currentTimeMillis();
+                if(location!=null && location.hasSpeed()){
+                    speed = location.getSpeed()*3.6;
+                    tv_speed.setText(String.format("%.3f", speed));
+                }
                 displayLocation();
-                Log.d("location", "lat: "+ latitude + "lon: "+ longitude);
+                Log.d("location", "lat: "+ latitude + " lon: "+ longitude+ " speed: "+String.format("%.3f", speed));
             }
 
             public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -165,14 +180,23 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if (location != null) {
                     latitude = (float) location.getLatitude();
                     longitude = (float)  location.getLongitude();
-                    Log.d("location gps","lat:" + latitude +", lon: " +longitude);
+                    /*timeLocation = System.currentTimeMillis();
+                    if(pTimeLocation!=0){
+                        // speed in kmph
+                        speed = 3.6*(getDistance(latitude,longitude,plat,plon)/((timeLocation-pTimeLocation)/1000));
+                        tv_speed.setText(Double.toString(speed));
+                    }
+                    pTimeLocation = timeLocation;
+                    plat = latitude;
+                    plon = longitude;*/
+                    Log.d("location gps","lat:" + latitude +", lon: " +longitude+", speed:"+speed);
                     displayLocation();
                 }
             }
-
-            if(isNetwork){
+            else if(isNetwork){
                 lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
                 location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
                 if (location != null) {
                     latitude = (float) location.getLatitude();
                     longitude = (float)  location.getLongitude();
@@ -194,7 +218,26 @@ public class MainActivity extends Activity implements SensorEventListener {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
             Log.d("sensor","accelerometer success");
         } else {
-            Log.d("sensor","accelerometer failed");
+            Log.d("sensor", "accelerometer failed");
+        }
+
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
+            // success!
+            gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_UI);
+            Log.d("sensor","gravity success");
+        } else {
+
+            Log.d("sensor", "gravity failed");
+        }
+
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null) {
+            // success!
+            magnometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            sensorManager.registerListener(this, magnometer, SensorManager.SENSOR_DELAY_UI);
+            Log.d("sensor","magnometer success");
+        } else {
+            Log.d("sensor", "magnometer failed");
         }
     }
 
@@ -206,11 +249,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         lon = (TextView) findViewById(R.id.lon);
         lat = (TextView) findViewById(R.id.lat);
 
-
+        etMaxtresh = (EditText) findViewById(R.id.et_maxtresh);
+        etMintresh = (EditText) findViewById(R.id.et_mintresh);
         tv_timestamp = (TextView) findViewById(R.id.tv_timestamp);
         status = (TextView) findViewById(R.id.tv_status);
         tv_mode = (TextView) findViewById(R.id.tv_mode);
         tv_data = (TextView) findViewById(R.id.tv_data);
+        tv_speed = (TextView) findViewById(R.id.speed);
+        tv_maxmin = (TextView) findViewById(R.id.tv_maxmin);
 
         sentBtn = (Button) findViewById(R.id.btn_sent);
         holeBtn = (Button) findViewById(R.id.btn_hole);
@@ -219,23 +265,32 @@ public class MainActivity extends Activity implements SensorEventListener {
         orieantationBtn = (Button) findViewById(R.id.btn_reorientation);
         autoBtn = (Button) findViewById(R.id.btn_automode);
         modeBtn = (Button) findViewById(R.id.btn_mode);
+        setBtn = (Button) findViewById(R.id.btn_set);
         sentarrayBtn = (Button) findViewById(R.id.btn_sent_array);
         sentarrayBtn.setVisibility(View.INVISIBLE);
         tv_mode.setText("ON");
     }
 
     public void initializeButton(){
+        setBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                max = Double.parseDouble(etMaxtresh.getText().toString());
+                min = Double.parseDouble(etMintresh.getText().toString());
+                tv_maxmin.setText("Max: "+ etMaxtresh.getText().toString()+", Min:"+etMintresh.getText().toString());
+            }
+        });
         modeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(isRealTime){
-                    modeBtn.setText("OFF");
+                    modeBtn.setText("ON");
                     tv_mode.setText("OFF");
                     sentarrayBtn.setVisibility(View.VISIBLE);
                     isRealTime = false;
                 }
                 else {
-                    modeBtn.setText("ON");
+                    modeBtn.setText("OFF");
                     tv_mode.setText("ON");
                     isRealTime = true;
                     sentarrayBtn.setVisibility(View.INVISIBLE);
@@ -250,7 +305,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                         postArrayData();
                         countData = 0;
                         dataAcc = new JSONArray();
-                        getLastId();
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -262,11 +317,17 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if(!isSent){
                     isSent = true;
                     x=1;
+                    try {
+                        postLocation(1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     status.setText("Normal");
                 }
                 else {
                     isSent = false;
                     status.setText("Not Sent");
+                    last_id++;
                 }
             }
         });
@@ -274,10 +335,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void onClick(View v) {
                 if(!isSent){
                     isSent = true;
-                    x=2;
+                    x=5;
                     status.setText("Hole");
                     try {
-                        postLocation(2);
+                        postLocation(5);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -285,6 +346,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 else {
                     isSent = false;
                     status.setText("Not Sent");
+                    last_id++;
                 }
             }
         });
@@ -292,10 +354,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void onClick(View v) {
                 if(!isSent){
                     isSent = true;
-                    x=3;
+                    x=6;
                     status.setText("Bump");
                     try {
-                        postLocation(3);
+                        postLocation(6);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -303,6 +365,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 else {
                     isSent = false;
                     status.setText("Not Sent");
+                    last_id++;
                 }
             }
         });
@@ -322,6 +385,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 else {
                     isSent = false;
                     status.setText("Not Sent");
+                    last_id++;
                 }
 
             }
@@ -333,6 +397,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                     isReorientation = false;
                     orieantationBtn.setText("REORIENTATION");
                     Context context = getApplicationContext();
+                    try {
+                        getLastId();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     CharSequence text = Integer.toString(last_id);
                     int duration = Toast.LENGTH_SHORT;
 
@@ -352,11 +421,20 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if(isAuto){
                     isAuto = false;
                     autoBtn.setText("AUTO");
+                    status.setText("Manual");
+                    holeBtn.setVisibility(View.VISIBLE);
+                    sentBtn.setVisibility(View.VISIBLE);
+                    bumpBtn.setVisibility(View.VISIBLE);
+                    breakBtn.setVisibility(View.VISIBLE);
                 }
                 else{
                     isAuto = true;
                     autoBtn.setText("Manual");
                     status.setText("Auto");
+                    holeBtn.setVisibility(View.INVISIBLE);
+                    sentBtn.setVisibility(View.INVISIBLE);
+                    bumpBtn.setVisibility(View.INVISIBLE);
+                    breakBtn.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -417,37 +495,34 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
-    void addObject(int jenis_id, Float z, Long time){
-        try {
-            JSONObject obj = new JSONObject();
-            obj.put("lat", Float.toString(latitude));
-            obj.put("lon", Float.toString(longitude));
-            obj.put("z", Float.toString(z));
-            obj.put("waktu", Long.toString(time));
-            obj.put("id_user", 4);
-            obj.put("jenis_id",jenis_id);
-            obj.put("block_id",last_id+1);
-            dataAcc.put(obj);
-            countData++;
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch(event.sensor.getType()){
             case Sensor.TYPE_ACCELEROMETER:
-                accelerometers = event.values.clone();
+
+                //accelerometers = event.values.clone();
+                accelerometers[0] = event.values[0];
+                accelerometers[1] = event.values[1];
+                accelerometers[2] = event.values[2];
+                accelerometers[3] = 0;
+                //accelerometers[3] = 0;
                 //Log.d("sensor",accelerometers[0]+" " +accelerometers[1]+" "+ accelerometers[2]);
                 break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                magnometers = event.values;
+                break;
+            case Sensor.TYPE_GRAVITY:
+                gravities = event.values;
+                break;
+
         }
+
         timestamp = System.currentTimeMillis();
         Log.d("timestamp",Long.toString(timestamp));
         // get the x,y,z values of the accelerometer
-        gravities[0] = alfa * gravities[0] + (1 - alfa) * accelerometers[0];
+        /*gravities[0] = alfa * gravities[0] + (1 - alfa) * accelerometers[0];
         gravities[1] = alfa * gravities[1] + (1 - alfa) * accelerometers[1];
-        gravities[2] = alfa * gravities[2] + (1 - alfa) * accelerometers[2];
+        gravities[2] = alfa * gravities[2] + (1 - alfa) * accelerometers[2];*/
         aX = accelerometers[0];
         aY = accelerometers[1];
         aZ = accelerometers[2];
@@ -462,10 +537,13 @@ public class MainActivity extends Activity implements SensorEventListener {
             aX = axisX;
             aY = axisY;
             aZ = axisZ;
+            Log.d("sensor auto ",String.format("%.4f", axisX)+" " +
+                    String.format("%.4f", axisY)+" "+
+                    String.format("%.4f", axisZ));
 
             eventDetection();
 
-            if((axisZ > 15 || axisZ < 5 ) && isContinue){
+            if((axisZ > max || axisZ < min ) && isContinue && speed != 0){
                 if( (pastZ - axisZ) < 0 ){
                     isBump = true;
                     isContinue = false;
@@ -505,37 +583,34 @@ public class MainActivity extends Activity implements SensorEventListener {
         else{
             // reorientation
             if(isReorientation){
+                /*float[] I = new float[16], inv = new float[16], earth = new float[16];
+                SensorManager.getRotationMatrix(Rotation,I,gravities,magnometers);
+                android.opengl.Matrix.invertM(inv, 0, Rotation, 0);
+                android.opengl.Matrix.multiplyMV(earth, 0, inv, 0, accelerometers, 0);
+                axisX=earth[0];
+                axisY=earth[1];
+                axisZ=earth[2];*/
+
                 alpha= Math.atan2(aY,aZ);
                 beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
                 axisX = (float) ((Math.cos(beta) * aX) + (Math.sin(beta) * Math.sin(alpha) * aY) +
                         (Math.cos(alpha) * Math.sin(beta) * aZ));
                 axisY = (float) (Math.cos(alpha) * aY - Math.sin(alpha) * aZ);
                 axisZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);
-                aX = axisX;
-                aY = axisY;
-                aZ = axisZ;
-                //axisX -= pastX;
-//            axisY -= pastY;
-//            axisZ -= pastZ;
-            /*Filter */
-                if((axisX >= -1) && (axisX <=1)) axisX = 0;
-                if((axisY >= -1) && (axisY <=1)) axisY = 0;
-                if((axisZ >= -1) && (axisZ <=1)) axisZ = 0;
+
+
                 Log.d("sensor Reor ",String.format("%.4f", axisX)+" " +
                         String.format("%.4f", axisY)+" "+
                         String.format("%.4f", axisZ));
             }
             else{
-            /*axisX = aX - pastX;
-            axisY = aY - pastY;
-            axisZ = aZ - pastZ;*/
-                axisX = aX;
-                axisY = aY;
-                axisZ = aZ;
-            /*Filter */
-                if((axisX >= -1) && (axisX <=1)) axisX = 0;
-                if((axisY >= -1) && (axisY <=1)) axisY = 0;
-                if((axisZ >= -1) && (axisZ <=1)) axisZ = 0;
+                float[] R = new float[9];
+                float[] I = new float[9];
+                SensorManager.getRotationMatrix(R, I, gravities, magnometers);
+                axisX = R[0] * aX + R[1] * aY + R[2] * aZ;
+                axisY = R[3] * aX + R[4] * aY + R[5] * aZ;
+                axisZ = R[6] * aX + R[7] * aY + R[8] * aZ;
+
                 Log.d("sensor Orie ",String.format("%.4f", axisX)+" " +
                         String.format("%.4f", axisY)+" "+
                         String.format("%.4f", axisZ));
@@ -572,7 +647,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d("response", response.toString());
+                        Log.d("response postaccel", response.toString());
                         Context context = getApplicationContext();
                         CharSequence text = response.toString();
                         int duration = Toast.LENGTH_SHORT;
@@ -678,5 +753,35 @@ public class MainActivity extends Activity implements SensorEventListener {
     public void displayLocation(){
         lat.setText(Float.toString(latitude));
         lon.setText(Float.toString(longitude));
+    }
+
+    private static double getDistance(double lat1, double lon1, double lat2, double lon2) {
+        double R = 6371000; // for haversine use R = 6372.8 km instead of 6371 km
+        double dLat = lat2 - lat1;
+        double dLon = lon2 - lon1;
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1) * Math.cos(lat2) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        //double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        // simplify haversine:
+        //return 2 * R * 1000 * Math.asin(Math.sqrt(a));
+    }
+
+    void addObject(int jenis_id, Float z, Long time){
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("lat", Float.toString(latitude));
+            obj.put("lon", Float.toString(longitude));
+            obj.put("z", Float.toString(z));
+            obj.put("waktu", Long.toString(time));
+            obj.put("id_user", id_user);
+            obj.put("jenis_id",jenis_id);
+            obj.put("location_id",last_id+1);
+            dataAcc.put(obj);
+            //countData++;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

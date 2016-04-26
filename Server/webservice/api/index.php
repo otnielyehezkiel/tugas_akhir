@@ -77,7 +77,7 @@ function getData(){
 function insertData() {
 	$request = \Slim\Slim::getInstance()->request();
 	$data = json_decode($request->getBody());
-	$sql = "INSERT INTO acc_data (lat, lon, z, waktu, id_user, jenis_id, block_id) VALUES (:lat, :lon, :z, :waktu, :id_user, :jenis_id, :block_id)";
+	$sql ="INSERT INTO acc_data (lat, lon, z, waktu, id_user, jenis_id, location_id) VALUES (:lat, :lon, :z, :waktu, :id_user, :jenis_id, :location_id)";
 	try {
 		$db = getDB();
 		$stmt = $db->prepare($sql);  
@@ -87,7 +87,7 @@ function insertData() {
 		$stmt->bindParam("waktu", $data->waktu);
 		$stmt->bindParam("id_user", $data->id_user);
 		$stmt->bindParam("jenis_id",$data->jenis_id);
-		$stmt->bindParam("block_id",$data->block_id);
+		$stmt->bindParam("location_id",$data->location_id);
 		$stmt->execute();
 		$db = null;
 		$status['STATUS']="SUCCESS";
@@ -128,7 +128,7 @@ function insertArray(){
 	$db = getDB();
 	$i = 0;
 	foreach($data as $obj){
-		$sql = "INSERT INTO acc_data (lat, lon, z, waktu, id_user, jenis_id, block_id) VALUES (:lat, :lon, :z, :waktu, :id_user, :jenis_id, :block_id)";
+		$sql = "INSERT INTO acc_data (lat, lon, z, waktu, id_user, jenis_id, location_id) VALUES (:lat, :lon, :z, :waktu, :id_user, :jenis_id, :location_id)";
 		try {
 			
 			$stmt = $db->prepare($sql);  
@@ -138,7 +138,7 @@ function insertArray(){
 			$stmt->bindParam("waktu", $obj->waktu);
 			$stmt->bindParam("id_user", $obj->id_user);
 			$stmt->bindParam("jenis_id",$obj->jenis_id);
-			$stmt->bindParam("block_id",$obj->block_id);
+			$stmt->bindParam("location_id",$obj->location_id);
 			$stmt->execute();
 			$status[$i] = "SUCCESS";	
 		} catch(PDOException $e) {

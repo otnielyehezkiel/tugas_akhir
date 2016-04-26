@@ -34,20 +34,30 @@ class Maps extends CI_Controller{
 	   		if($row->jenis_id == 3){
 	   			$marker['icon'] = base_url('/assets/images/bump_marker.png');
 	   		}
-	   		else {
+	   		elseif($row->jenis_id == 4){
+	   			$marker['icon'] = base_url('/assets/images/break_marker.png');	
+	   		}
+	   		elseif($row->jenis_id == 5){
+	   			$marker['icon'] = base_url('/assets/images/true_hole.png');		
+	   		}
+	   		elseif($row->jenis_id == 6){
+				$marker['icon'] = base_url('/assets/images/true_bump.png');	
+	   		}
+	   		elseif($row->jenis_id == 2){ 
 	   			$marker['icon'] = base_url('/assets/images/hole_marker.png');
+	   		}
+	   		elseif($row->jenis_id == 1){ 
+	   			$marker['icon'] = base_url('/assets/images/normal_marker.png');
 	   		}
 	   		$marker['position'] = "{$row->lat}, {$row->lon}";
 			$marker['infowindow_content'] = "{$row->id}";
 			$marker['draggable'] = FALSE;
 			$url = base_url('/maps/getdata/'). "?id={$row->id}";
-			$marker['ondblclick'] = "window.location='".$url."'";
+			$marker['ondblclick'] = "window.open('".$url."','_blank')";
 			$this->googlemaps->add_marker($marker);
 		}		
-		
 		$data['map'] = $this->googlemaps->create_map();
-		$this->load->view('gmaps',$data);
-		
+		$this->load->view('gmaps',$data);	
 	}
 	public function getdata(){
 		$id = $this->input->get('id');
@@ -65,7 +75,7 @@ class Maps extends CI_Controller{
 
 		$params = array('width' => 1000, 'height' => 400, 'margin' => 30, 'backgroundColor' => '#eeeeee');
 		$this->load->library('chart', $params);
-		$this->chart->setFormat(5,',','.');
+		$this->chart->setFormat(3,',','.');
 
 		$this->chart->addSeries($axisZ,'line','normal ', SOLID,'#00ff00', '#00ff00');
 
@@ -73,7 +83,7 @@ class Maps extends CI_Controller{
 		$this->chart->setYAxis('#000000', SOLID, 2, "Acceleration");
 		$this->chart->setLabels($waktu, '#000000', 1, HORIZONTAL);
 		$this->chart->setGrid("#bbbbbb", DASHED, "#bbbbbb", DOTTED);
-		$this->chart->plot('./assets/images/chart_data.png');
+		$this->chart->plot('./assets/images/chart_data_'.$id.'.png');
 		/*Statistic*/
 		$this->load->library('Statistics');
 		$statistics = new Statistics();
@@ -82,10 +92,21 @@ class Maps extends CI_Controller{
 		$data['mean'] = $statistics->getMean();
 		$data['max'] = $statistics->getMax();
 		$data['min'] = $statistics->getMin();
-		$data['id'] = $acc[0]->block_id;
+		$data['diffmaxmin'] = $statistics->getMax() - $statistics->getMin();
+		$data['id'] = $acc[0]->location_id;
+		$data['count'] = count($axisZ);
 		if($acc[0]->jenis_id == 3) 
 			$data['jenis'] = "Bump";
-		else $data['jenis'] = "Hole";
+		elseif($acc[0]->jenis_id == 2) 
+			$data['jenis'] = "Hole";
+		elseif($acc[0]->jenis_id == 4) 
+			$data['jenis'] = "Break";
+		elseif($acc[0]->jenis_id == 5) 
+			$data['jenis'] = "True Bump";
+		elseif($acc[0]->jenis_id == 6) 
+			$data['jenis'] = "True Hole";
+		elseif($acc[0]->jenis_id == 1) 
+			$data['jenis'] = "Normal";
 		$this->load->view('acc_data',$data);
 	} 
 
