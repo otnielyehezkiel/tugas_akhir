@@ -12,6 +12,7 @@
 	echo "min =".$min."<br>";
 	echo "max-min =".$diffmaxmin."<br>";
 	echo "jumlah data =".$count."<br>";
+	echo "durasi =".$durasi." s<br>";
 ?>
 </body>
 </html>

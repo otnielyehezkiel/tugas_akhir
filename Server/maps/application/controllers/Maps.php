@@ -96,6 +96,7 @@ class Maps extends CI_Controller{
 		$data['diffmaxmin'] = $statistics->getMax() - $statistics->getMin();
 		$data['id'] = $acc[0]->location_id;
 		$data['count'] = count($axisZ);
+		$data['durasi'] =  $acc[count($axisZ)-1]->waktu - $acc[0]->waktu;
 		if($jenis == 3) 
 			$data['jenis'] = "Bump";
 		elseif($jenis == 2) 
@@ -103,9 +104,9 @@ class Maps extends CI_Controller{
 		elseif($jenis  == 4) 
 			$data['jenis'] = "Break";
 		elseif($jenis == 5) 
-			$data['jenis'] = "True Bump";
-		elseif($jenis  == 6) 
 			$data['jenis'] = "True Hole";
+		elseif($jenis  == 6) 
+			$data['jenis'] = "True Bump";
 		elseif($jenis == 1) 
 			$data['jenis'] = "Normal";
 		$this->load->view('acc_data',$data);
@@ -251,5 +252,24 @@ class Maps extends CI_Controller{
 		$data['block'] =$c;
 		$data['cpblock'] = $x[$INDEX];*/
 		$this->load->view('statistics',$data);
+	}
+
+	public function svm_test(){
+		error_reporting(E_ALL);
+echo '1';
+$data = array(
+    array(-1, 1 => 0.43, 3 => 0.12, 9284 => 0.2),
+    array(1, 1 => 0.22, 5 => 0.01, 94 => 0.11),
+	);
+	echo '2';
+	$svm = new SVM();
+	echo '3';
+	$model = $svm->train($data);
+	echo '4';
+	$data = array(1 => 0.43, 3 => 0.12, 9284 => 0.2);
+	$result = $model->predict($data);
+	var_dump($result);
+	//$model->save('model.svm');
+	echo '5';
 	}
 }

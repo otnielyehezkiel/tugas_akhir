@@ -92,7 +92,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float magnometers[]=new float[3];
     private float Rotation[] =new float[16];
     private float earth_acc[] =new float[3];
-    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data,tv_speed,tv_maxmin;
+    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data,tv_speed,tv_maxmin,tv_std;
     private Button sentBtn, holeBtn, bumpBtn, breakBtn ,orieantationBtn, modeBtn, sentarrayBtn, autoBtn,setBtn;
     private EditText etMintresh, etMaxtresh;
 
@@ -110,7 +110,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean isHole = false;
     private boolean isContinue = true;
     private int countData = 0;
-    private float latitude, longitude,plat,plon;
+    private float latitude, longitude;
     private int id_user=1;
     private int last_id;
     private Statistics c;
@@ -121,7 +121,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
-    public Array stdData;
     private long t=0;
     public LinkedList<JSONObject> q;
 
@@ -190,15 +189,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if (location != null) {
                     latitude = (float) location.getLatitude();
                     longitude = (float)  location.getLongitude();
-                    /*timeLocation = System.currentTimeMillis();
-                    if(pTimeLocation!=0){
-                        // speed in kmph
-                        speed = 3.6*(getDistance(latitude,longitude,plat,plon)/((timeLocation-pTimeLocation)/1000));
-                        tv_speed.setText(Double.toString(speed));
-                    }
-                    pTimeLocation = timeLocation;
-                    plat = latitude;
-                    plon = longitude;*/
                     Log.d("location gps","lat:" + latitude +", lon: " +longitude+", speed:"+speed);
                     displayLocation();
                 }
@@ -225,7 +215,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success!
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
             Log.d("sensor","accelerometer success");
         } else {
             Log.d("sensor", "accelerometer failed");
@@ -234,7 +224,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
             // success!
             gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
             Log.d("sensor","gravity success");
         } else {
 
@@ -244,7 +234,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null) {
             // success!
             magnometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-            sensorManager.registerListener(this, magnometer, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(this, magnometer, SensorManager.SENSOR_DELAY_NORMAL);
             Log.d("sensor","magnometer success");
         } else {
             Log.d("sensor", "magnometer failed");
@@ -261,7 +251,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         etMaxtresh = (EditText) findViewById(R.id.et_maxtresh);
         etMintresh = (EditText) findViewById(R.id.et_mintresh);
+
         tv_timestamp = (TextView) findViewById(R.id.tv_timestamp);
+        tv_std = (TextView) findViewById(R.id.tv_std);
         status = (TextView) findViewById(R.id.tv_status);
         tv_mode = (TextView) findViewById(R.id.tv_mode);
         tv_data = (TextView) findViewById(R.id.tv_data);
@@ -407,11 +399,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                     isReorientation = false;
                     orieantationBtn.setText("REORIENTATION");
                     Context context = getApplicationContext();
-                    try {
-                        getLastId();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
                     CharSequence text = Integer.toString(last_id);
                     int duration = Toast.LENGTH_SHORT;
 
@@ -453,13 +440,11 @@ public class MainActivity extends Activity implements SensorEventListener {
     //onResume() register the accelerometer for listening the events
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
     }
 
     //onPause() unregister the accelerometer for stop listening the events
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this);
     }
 
     protected void onDestroy(){
@@ -472,7 +457,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
 
     public void eventDetection(){
-        if(isBump && ((timestamp - t) < 2000) && !isContinue){
+        if(isBump && ((timestamp - t) < 2000) && !isContinue && speed !=0){
             addObject(axisZ,timestamp);
         }
         else if(isBump){
@@ -511,12 +496,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                 float z = (float) q.get(i).getDouble("z");
                 long time = q.get(i).getLong("waktu");
                 addObject(z,time);
-                Log.d("test= ",Float.toString(z)+ " ke-"+Integer.toString(i));
+                //Log.d("test= ",Float.toString(z)+ " ke-"+Integer.toString(i));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        Log.d("test= ","-------");
+        //Log.d("test= ","-------");
     }
 
     @Override
@@ -594,14 +579,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                     t = timestamp;
                     countData = 0;
                     status.setText("BUMP ");
-                    /*addObject(3,pastZ,pastTime);
-                    addObject(3,axisZ,timestamp);*/
-                    setPostData();
+                    tv_std.setText(String.format("%.4f", c.getStdDev()));
                     try {
                         postLocation(3);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    setPostData();
                 }
                 else{
                     isHole = true;
@@ -609,14 +593,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                     t = timestamp;
                     countData = 0;
                     status.setText("HOLE ");
-                    /*addObject(2,pastZ,pastTime);
-                    addObject(2,axisZ,timestamp);*/
-                    setPostData();
+                    tv_std.setText(String.format("%.4f", c.getStdDev()));
                     try {
                         postLocation(2);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    setPostData();
                 }
             }
             //sent when detect event
@@ -748,6 +731,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+                        Context context = getApplicationContext();
+                        CharSequence text = response.toString();
+                        int duration = Toast.LENGTH_SHORT;
+
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
                         Log.d("response", response.toString());
                     }
                 },
