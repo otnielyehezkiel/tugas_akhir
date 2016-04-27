@@ -21,6 +21,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.NetworkError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.example.otnielyeheskiel.accelerometerdata.Statistics;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -41,7 +48,9 @@ import org.json.JSONObject;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
@@ -102,9 +111,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean isContinue = true;
     private int countData = 0;
     private float latitude, longitude,plat,plon;
-    private int id_user=6;
+    private int id_user=1;
     private int last_id;
-
+    private Statistics c;
     final String URL = "http://128.199.235.115/api/accelerometer";
     final String URL2 = "http://128.199.235.115/api/array";
     final String URL3 = "http://128.199.235.115/api/id_block";
@@ -114,6 +123,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     public JSONArray dataAcc;
     public Array stdData;
     private long t=0;
+    public LinkedList<JSONObject> q;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -124,7 +134,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         initializeButton();
         //Location Function
         locationFunc();
-
+        q = new LinkedList<>();
         //sensor function
         sensorFunc();
         dataAcc = new JSONArray();
@@ -463,7 +473,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     public void eventDetection(){
         if(isBump && ((timestamp - t) < 2000) && !isContinue){
-            addObject(3,axisZ,timestamp);
+            addObject(axisZ,timestamp);
         }
         else if(isBump){
             isBump = false;
@@ -479,7 +489,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
 
         if(isHole && ((timestamp - t) < 2000) && !isContinue){
-            addObject(2,axisZ,timestamp);
+            addObject(axisZ,timestamp);
         }
         else if(isHole){
             isHole = false;
@@ -495,11 +505,24 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
+    public void setPostData(){
+        for(int i=0;i<q.size();i++){
+            try {
+                float z = (float) q.get(i).getDouble("z");
+                long time = q.get(i).getLong("waktu");
+                addObject(z,time);
+                Log.d("test= ",Float.toString(z)+ " ke-"+Integer.toString(i));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        Log.d("test= ","-------");
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch(event.sensor.getType()){
             case Sensor.TYPE_ACCELEROMETER:
-
                 //accelerometers = event.values.clone();
                 accelerometers[0] = event.values[0];
                 accelerometers[1] = event.values[1];
@@ -509,20 +532,17 @@ public class MainActivity extends Activity implements SensorEventListener {
                 //Log.d("sensor",accelerometers[0]+" " +accelerometers[1]+" "+ accelerometers[2]);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                magnometers = event.values;
+                magnometers = event.values.clone();
                 break;
             case Sensor.TYPE_GRAVITY:
-                gravities = event.values;
+                gravities = event.values.clone();
                 break;
 
         }
 
         timestamp = System.currentTimeMillis();
         Log.d("timestamp",Long.toString(timestamp));
-        // get the x,y,z values of the accelerometer
-        /*gravities[0] = alfa * gravities[0] + (1 - alfa) * accelerometers[0];
-        gravities[1] = alfa * gravities[1] + (1 - alfa) * accelerometers[1];
-        gravities[2] = alfa * gravities[2] + (1 - alfa) * accelerometers[2];*/
+
         aX = accelerometers[0];
         aY = accelerometers[1];
         aZ = accelerometers[2];
@@ -542,16 +562,41 @@ public class MainActivity extends Activity implements SensorEventListener {
                     String.format("%.4f", axisZ));
 
             eventDetection();
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("z", Float.toString(axisZ));
+                obj.put("waktu", Long.toString(timestamp));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-            if((axisZ > max || axisZ < min ) && isContinue && speed != 0){
+            q.addLast(obj);
+            if(q.size()==10){
+                double[] std = new double[10];
+                for(int i=0;i<q.size();i++){
+                    try {
+                        std[i]= q.get(i).getDouble("z");
+                        //Log.d("test= ",Integer.toString(q.get(i).getInt("test")));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                //Log.d("test= ","------");
+                c = new Statistics(std);
+                Log.d("statistic std= ",String.format("%.4f", c.getStdDev())+" ");
+                q.removeFirst();
+            }
+
+            if((axisZ > max || axisZ < min ) && isContinue){
                 if( (pastZ - axisZ) < 0 ){
                     isBump = true;
                     isContinue = false;
                     t = timestamp;
                     countData = 0;
                     status.setText("BUMP ");
-                    addObject(3,pastZ,pastTime);
-                    addObject(3,axisZ,timestamp);
+                    /*addObject(3,pastZ,pastTime);
+                    addObject(3,axisZ,timestamp);*/
+                    setPostData();
                     try {
                         postLocation(3);
                     } catch (JSONException e) {
@@ -564,8 +609,9 @@ public class MainActivity extends Activity implements SensorEventListener {
                     t = timestamp;
                     countData = 0;
                     status.setText("HOLE ");
-                    addObject(2,pastZ,pastTime);
-                    addObject(2,axisZ,timestamp);
+                    /*addObject(2,pastZ,pastTime);
+                    addObject(2,axisZ,timestamp);*/
+                    setPostData();
                     try {
                         postLocation(2);
                     } catch (JSONException e) {
@@ -630,18 +676,21 @@ public class MainActivity extends Activity implements SensorEventListener {
                         e.printStackTrace();
                     }
                 } else {
-                    addObject(x,axisZ,timestamp);
-                    countData++;
+                    addObject(axisZ,timestamp);
+                    //countData++;
                 }
             }
         }
-
         displayCurrentValues();
     }
     /*Method Post RealTime Data Accelerometer*/
     public void postAccelData() throws JSONException {
         JSONObject obj = new JSONObject();
-        addObject(x,axisZ,timestamp);
+        obj.put("lat", Float.toString(latitude));
+        obj.put("lon", Float.toString(longitude));
+        obj.put("z", Float.toString(axisZ));
+        obj.put("waktu", Long.toString(timestamp));
+        obj.put("location_id",last_id+1);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL,obj,
                 new Response.Listener<JSONObject>() {
@@ -693,6 +742,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         obj.put("lat", Float.toString(latitude));
         obj.put("lon", Float.toString(longitude));
         obj.put("jenis_id",jenis_id);
+        obj.put("user_id", id_user);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL4,obj,
                 new Response.Listener<JSONObject>() {
@@ -705,6 +755,27 @@ public class MainActivity extends Activity implements SensorEventListener {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("volley: ", error.toString());
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if (networkResponse != null) {
+                            Log.d("Volley", "Error. HTTP Status Code:"+networkResponse.statusCode);
+                        }if (error instanceof TimeoutError) {
+                            Log.d("Volley", "TimeoutError");
+                        }
+                        else if(error instanceof NoConnectionError){
+                            Log.d("Volley", "NoConnectionError");
+                        }
+                        else if (error instanceof AuthFailureError) {
+                            Log.d("Volley", "AuthFailureError");
+                        }
+                        else if (error instanceof ServerError) {
+                            Log.d("Volley", "ServerError");
+                        }
+                        else if (error instanceof NetworkError) {
+                            Log.d("Volley", "NetworkError");
+                        }
+                        else if (error instanceof ParseError) {
+                            Log.d("Volley", "ParseError");
+                        }
                     }
                 });
         ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
@@ -736,6 +807,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.d("volley:", error.toString());
+
                 }
             });
         ApplicationController.getInstance().addToRequestQueue(getRequest);
@@ -755,31 +827,16 @@ public class MainActivity extends Activity implements SensorEventListener {
         lon.setText(Float.toString(longitude));
     }
 
-    private static double getDistance(double lat1, double lon1, double lat2, double lon2) {
-        double R = 6371000; // for haversine use R = 6372.8 km instead of 6371 km
-        double dLat = lat2 - lat1;
-        double dLon = lon2 - lon1;
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1) * Math.cos(lat2) *
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        //double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        // simplify haversine:
-        //return 2 * R * 1000 * Math.asin(Math.sqrt(a));
-    }
-
-    void addObject(int jenis_id, Float z, Long time){
+    void addObject(Float z, Long time){
         try {
             JSONObject obj = new JSONObject();
             obj.put("lat", Float.toString(latitude));
             obj.put("lon", Float.toString(longitude));
             obj.put("z", Float.toString(z));
             obj.put("waktu", Long.toString(time));
-            obj.put("id_user", id_user);
-            obj.put("jenis_id",jenis_id);
             obj.put("location_id",last_id+1);
             dataAcc.put(obj);
-            //countData++;
+            countData++;
         } catch (JSONException e) {
             e.printStackTrace();
         }

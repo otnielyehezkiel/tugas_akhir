@@ -17,8 +17,8 @@ class Maps extends CI_Controller{
 		//$loc = $this->acc_model->getLocation();
 
 	   	$config['center'] = '-7.2859516, 112.795845';
-		$config['zoom'] = '16';
-		$config['map_height'] = '800px';
+		$config['zoom'] = '13';
+		$config['map_height'] = '550px';
 		$this->googlemaps->initialize($config);
 		/*Polyline
 		$polyline = array();
@@ -62,6 +62,7 @@ class Maps extends CI_Controller{
 	public function getdata(){
 		$id = $this->input->get('id');
 		$acc = $this->acc_model->getAccel($id);
+		$jenis = $this->acc_model->getJenis($id)[0]->jenis_id;
 		$axisZ = array();
 		$waktu = array();
 		$timestamp = $acc[0]->waktu;
@@ -77,7 +78,7 @@ class Maps extends CI_Controller{
 		$this->load->library('chart', $params);
 		$this->chart->setFormat(3,',','.');
 
-		$this->chart->addSeries($axisZ,'line','normal ', SOLID,'#00ff00', '#00ff00');
+		$this->chart->addSeries($axisZ,'line','normal ', SOLID,'#FF0000', '#FF0000');
 
 		$this->chart->setXAxis('#000000', SOLID, 1, "Timestamp");
 		$this->chart->setYAxis('#000000', SOLID, 2, "Acceleration");
@@ -95,17 +96,17 @@ class Maps extends CI_Controller{
 		$data['diffmaxmin'] = $statistics->getMax() - $statistics->getMin();
 		$data['id'] = $acc[0]->location_id;
 		$data['count'] = count($axisZ);
-		if($acc[0]->jenis_id == 3) 
+		if($jenis == 3) 
 			$data['jenis'] = "Bump";
-		elseif($acc[0]->jenis_id == 2) 
+		elseif($jenis == 2) 
 			$data['jenis'] = "Hole";
-		elseif($acc[0]->jenis_id == 4) 
+		elseif($jenis  == 4) 
 			$data['jenis'] = "Break";
-		elseif($acc[0]->jenis_id == 5) 
+		elseif($jenis == 5) 
 			$data['jenis'] = "True Bump";
-		elseif($acc[0]->jenis_id == 6) 
+		elseif($jenis  == 6) 
 			$data['jenis'] = "True Hole";
-		elseif($acc[0]->jenis_id == 1) 
+		elseif($jenis == 1) 
 			$data['jenis'] = "Normal";
 		$this->load->view('acc_data',$data);
 	} 

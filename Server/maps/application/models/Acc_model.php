@@ -18,10 +18,10 @@ class Acc_Model extends CI_Model {
     }
 
     function getBumpLocation() {
-    	$query = $this->db->query('SELECT l.lat,l.lon,l.id,l.jenis_id 
-            FROM location l, acc_data a
-	   		WHERE (l.id = a.location_id and a.id_user = 6) 
-            ORDER BY id ASC')->result();
+    	$query = $this->db->query('SELECT lat,lon,id,jenis_id 
+            FROM location --l, acc_data a
+	   		-- WHERE (l.id = a.location_id) 
+            --ORDER BY l.id ASC')->result();
     	return $query;
     }
 
@@ -31,6 +31,13 @@ class Acc_Model extends CI_Model {
     		WHERE location_id = '.$id.'
 	   		ORDER BY waktu ASC')->result();
     	return $query;
+    }
+
+    function getJenis($id){
+        $query = $this->db->query("SELECT jenis_id
+            FROM location 
+            WHERE id = ".$id)->result();
+        return $query;
     }
 
     function getTest(){
