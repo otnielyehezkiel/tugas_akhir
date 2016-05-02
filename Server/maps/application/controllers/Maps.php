@@ -31,6 +31,7 @@ class Maps extends CI_Controller{
 		$loc = $this->acc_model->getBumpLocation();
 		$marker = array();
 	   	foreach ($loc as $row){
+	   		//echo $row->jenis_id;
 	   		if($row->jenis_id == 3){
 	   			$marker['icon'] = base_url('/assets/images/bump_marker.png');
 	   		}
@@ -52,7 +53,7 @@ class Maps extends CI_Controller{
 	   		$marker['position'] = "{$row->lat}, {$row->lon}";
 			$marker['infowindow_content'] = "{$row->id}";
 			$marker['draggable'] = FALSE;
-			$url = base_url('/maps/getdata/'). "?id={$row->id}";
+			$url = base_url('/maps/graph_new/'). "?id={$row->id}";
 			$marker['ondblclick'] = "window.open('".$url."','_blank')";
 			$this->googlemaps->add_marker($marker);
 		}		
@@ -84,16 +85,16 @@ class Maps extends CI_Controller{
 		$this->chart->setYAxis('#000000', SOLID, 2, "Acceleration");
 		$this->chart->setLabels($waktu, '#000000', 1, HORIZONTAL);
 		$this->chart->setGrid("#bbbbbb", DASHED, "#bbbbbb", DOTTED);
-		$this->chart->plot('./assets/images/chart_data_'.$id.'.png');
+		$this->chart->plot('./assets/images/chart/chart_data_'.$id.'.png');
 		/*Statistic*/
 		$this->load->library('Statistics');
 		$statistics = new Statistics();
 		$statistics->addSet($axisZ);
-		$data['std'] = $statistics->getStdDeviation();
-		$data['mean'] = $statistics->getMean();
-		$data['max'] = $statistics->getMax();
-		$data['min'] = $statistics->getMin();
-		$data['diffmaxmin'] = $statistics->getMax() - $statistics->getMin();
+		$data['std'] = number_format((float)$statistics->getStdDeviation(), 3, '.', '');
+		$data['mean'] = number_format((float)$statistics->getMean(), 3, '.', '');
+		$data['max'] = number_format((float)$statistics->getMax(), 3, '.', '');
+		$data['min'] = number_format((float)$statistics->getMin(), 3, '.', '');
+		$data['diffmaxmin'] = number_format((float)$statistics->getMax() - $statistics->getMin(), 3, '.', '');
 		$data['id'] = $acc[0]->location_id;
 		$data['count'] = count($axisZ);
 		$data['durasi'] =  $acc[count($axisZ)-1]->waktu - $acc[0]->waktu;
@@ -111,6 +112,7 @@ class Maps extends CI_Controller{
 			$data['jenis'] = "Normal";
 		$this->load->view('acc_data',$data);
 	} 
+
 
 	public function graph(){
 	   	$accData = $this->acc_model->getAccel();
@@ -256,20 +258,77 @@ class Maps extends CI_Controller{
 
 	public function svm_test(){
 		error_reporting(E_ALL);
-echo '1';
-$data = array(
-    array(-1, 1 => 0.43, 3 => 0.12, 9284 => 0.2),
-    array(1, 1 => 0.22, 5 => 0.01, 94 => 0.11),
-	);
-	echo '2';
-	$svm = new SVM();
-	echo '3';
-	$model = $svm->train($data);
-	echo '4';
-	$data = array(1 => 0.43, 3 => 0.12, 9284 => 0.2);
-	$result = $model->predict($data);
-	var_dump($result);
-	//$model->save('model.svm');
-	echo '5';
+		echo '1';
+		$data = array(
+		array(-1, 1 => 0.43, 3 => 0.12, 9284 => 0.2),
+		array(1, 1 => 0.22, 5 => 0.01, 94 => 0.11),
+		);
+		echo '2';
+		$svm = new SVM();
+		echo '3';
+		$model = $svm->train($data);
+		echo '4';
+		$data = array(1 => 0.43, 3 => 0.12, 9284 => 0.2);
+		$result = $model->predict($data);
+		var_dump($result);
+		//$model->save('model.svm');
+		echo '5';
+	}
+
+	public function graph_new(){
+		$id = $this->input->get('id');
+		$acc = $this->acc_model->getAccel($id);
+		$jenis = $this->acc_model->getJenis($id)[0]->jenis_id;
+		$validasi = $this->acc_model->getJenis($id)[0]->validasi;
+		$axisZ = array();
+		$waktu = array();
+		$timestamp = $acc[0]['waktu'];
+
+		foreach ($acc as &$row) {
+			$row['waktu'] -= $timestamp;
+			$row['waktu'] /= 1000;
+			array_push($axisZ,$row['z']);
+		}
+		$fp = fopen('./assets/images/file.csv', 'w');
+		foreach ($acc as $row) {
+			unset($row['location_id']);
+			fputcsv($fp, $row);
+		}
+		fclose($fp);
+
+		/*Statistic*/
+		$this->load->library('Statistics');
+		$statistics = new Statistics();
+		$statistics->addSet($axisZ);
+		$data['std'] = number_format((float)$statistics->getStdDeviation(), 3, '.', '');
+		$data['mean'] = number_format((float)$statistics->getMean(), 3, '.', '');
+		$data['max'] = number_format((float)$statistics->getMax(), 3, '.', '');
+		$data['min'] = number_format((float)$statistics->getMin(), 3, '.', '');
+		$data['diffmaxmin'] = number_format((float)$statistics->getMax() - $statistics->getMin(), 3, '.', '');
+		$data['id'] = $id;
+		$data['count'] = count($axisZ);
+		$data['durasi'] =  $acc[count($axisZ)-1]['waktu'] - $acc[0]['waktu'];
+		$data['validasi'] = ($validasi == 0 ? 'Belum Divalidasi' : 'Sudah Divalidasi');
+		if($jenis == 3) 
+			$data['jenis'] = "Bump";
+		elseif($jenis == 2) 
+			$data['jenis'] = "Hole";
+		elseif($jenis  == 4) 
+			$data['jenis'] = "Break";
+		elseif($jenis == 5) 
+			$data['jenis'] = "True Hole";
+		elseif($jenis  == 6) 
+			$data['jenis'] = "True Bump";
+		elseif($jenis == 1) 
+			$data['jenis'] = "Normal";
+
+		$this->load->view('chart',$data);
+	}
+
+	public function updateValidasi(){
+		$data['id'] = $this->input->get('id');
+		$data['value'] = $this->input->get('value');
+		if($this->acc_model->updateValidasi($data))
+			echo "berhasil";
 	}
 }

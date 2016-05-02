@@ -80,12 +80,14 @@ function getData(){
 function insertData() {
 	$request = \Slim\Slim::getInstance()->request();
 	$data = json_decode($request->getBody());
-	$sql ="INSERT INTO acc_data (lat, lon, z, waktu, location_id) VALUES (:lat, :lon, :z, :waktu, :location_id)";
+	$sql ="INSERT INTO acc_data (lat, lon, x, y, z, waktu, location_id) VALUES (:lat, :lon, :x, :y, :z, :waktu, :location_id)";
 	try {
 		$db = getDB();
 		$stmt = $db->prepare($sql);  
 		$stmt->bindParam("lat", $data->lat);
 		$stmt->bindParam("lon", $data->lon);
+		$stmt->bindParam("x", $obj->x);
+		$stmt->bindParam("y", $obj->y);
 		$stmt->bindParam("z", $data->z);
 		$stmt->bindParam("waktu", $data->waktu);
 		$stmt->bindParam("location_id",$data->location_id);
@@ -106,12 +108,14 @@ function insertArray(){
 	$db = getDB();
 	$i = 0;
 	foreach($data as $obj){
-		$sql = "INSERT INTO acc_data (lat, lon, z, waktu,  location_id) VALUES (:lat, :lon, :z, :waktu, :location_id)";
+		$sql = "INSERT INTO acc_data (lat, lon, x, y, z, waktu,  location_id) VALUES (:lat, :lon, :x, :y, :z, :waktu, :location_id)";
 		try {
 			
 			$stmt = $db->prepare($sql);  
 			$stmt->bindParam("lat", $obj->lat);
 			$stmt->bindParam("lon", $obj->lon);
+			$stmt->bindParam("x", $obj->x);
+			$stmt->bindParam("y", $obj->y);
 			$stmt->bindParam("z", $obj->z);
 			$stmt->bindParam("waktu", $obj->waktu);
 			$stmt->bindParam("location_id",$obj->location_id);

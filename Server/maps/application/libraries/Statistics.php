@@ -252,11 +252,12 @@ class Statistics
         $num  = $squares - (pow(array_sum($this->set),2)/$this->set_data['set_size']);
 
         $this->set_data['variance']     = $num / ($this->set_data['set_size'] - 1);
+
         $this->set_data['pop_variance'] = $num / $this->set_data['set_size'];
 
         $this->set_data['std_deviation']     = pow($this->set_data['variance'], .5);
         $this->set_data['pop_std_deviation'] = pow($this->set_data['pop_variance'], .5);
-
+        //die(var_dump($this->set_data['set_size']));
         return $this;
     }
 

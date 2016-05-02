@@ -6,12 +6,12 @@ class Acc_Model extends CI_Model {
 
     public function __construct(){
         // Call the CI_Model constructor
-        $this->load->database();
         parent::__construct();
+        $this->load->database();
     }
  
     function getLocation() {
-    	$query = $this->db->query('SELECT DISTINCT lat,lon,waktu,z,id FROM location
+    	$query = $this->db->result('SELECT DISTINCT lat,lon,waktu,z,id FROM location
             where id_user=2
 	   		ORDER BY waktu ASC ')->result();
     	return $query;
@@ -26,15 +26,15 @@ class Acc_Model extends CI_Model {
     }
 
     function getAccel($id){
-    	$query = $this->db->query('SELECT *
+    	$query = $this->db->query('SELECT waktu,z,location_id
     		FROM acc_data 
     		WHERE location_id = '.$id.'
-	   		ORDER BY waktu ASC')->result();
+	   		ORDER BY waktu ASC')->result_array();
     	return $query;
     }
 
     function getJenis($id){
-        $query = $this->db->query("SELECT jenis_id
+        $query = $this->db->query("SELECT jenis_id,validasi
             FROM location 
             WHERE id = ".$id)->result();
         return $query;
@@ -48,6 +48,36 @@ class Acc_Model extends CI_Model {
         return $query;
     }
 
- 
+    function getTrainingData(){
+        $query = $this->db->query('SELECT l.id, l.jenis_id, a.z 
+            FROM acc_data a, location l 
+            WHERE a.location_id = l.id
+            ORDER BY l.id ASC')->result();
+        return $query;
+    }
+
+    function getPredictData($id){
+        $query = $this->db->query('SELECT l.id, l.jenis_id, a.z 
+            FROM acc_data a, location l 
+            WHERE a.location_id = l.id and l.id ='.$id)->result();
+        return $query;
+    }
+
+    function updateValidasi($data){
+        if($data['value']=='true'){
+            $arr = array(
+                'validasi' => '1'
+            );
+        }
+        else {
+            $arr = array(
+                'validasi' => '1',
+                'jenis_id' => '4'
+            );
+        }
+        $this->db->where('id',$data['id']);
+        return $this->db->update('location',$arr);
+    }
+
 }
  
