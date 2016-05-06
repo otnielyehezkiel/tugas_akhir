@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,6 +12,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -35,7 +37,7 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 
-public class MainActivity extends  AppCompatActivity implements SensorEventListener   {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private float lastX, lastY, lastZ;
 
@@ -43,11 +45,13 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
     private Sensor accelerometer;
     private Sensor gravity;
     private Sensor magnometer;
+    private MediaPlayer mpBump, mpHole;
+
     private long timestamp;
     private long pastTime;
     private long timeLocation;
-    private long pTimeLocation=0;
-    private double max=16.5,min=0;
+    private long pTimeLocation = 0;
+    private double max = 16.5, min = 0;
 
     private double alpha;
     private double beta;
@@ -70,12 +74,12 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
 
     private final float alfa = (float) 0.8;
 
-    private float gravities[]=new float[3];
-    private float accelerometers[]=new float[5];
-    private float magnometers[]=new float[3];
-    private TextView currentX, currentY, currentZ, status, lon,lat,tv_timestamp,tv_mode,tv_data,tv_speed,tv_maxmin,tv_std,tv_locationid;
-    private TextView tv_jumlah_hole,tv_jumlah_bump;
-    private Button sentBtn, holeBtn, bumpBtn ,orieantationBtn, modeBtn, sentarrayBtn, autoBtn,setBtn;
+    private float gravities[] = new float[3];
+    private float accelerometers[] = new float[5];
+    private float magnometers[] = new float[3];
+    private TextView currentX, currentY, currentZ, status, lon, lat, tv_timestamp, tv_mode, tv_data, tv_speed, tv_maxmin, tv_std, tv_locationid;
+    private TextView tv_jumlah_hole, tv_jumlah_bump, tv_bearing;
+    private Button sentBtn, holeBtn, bumpBtn, orieantationBtn, modeBtn, sentarrayBtn, autoBtn, setBtn;
     private double std;
     private EditText etMintresh, etMaxtresh;
 
@@ -83,9 +87,11 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     protected LocationManager lm;
     protected Location location;
+    private GeomagneticField geoField;
+    private LocationListener locationListener;
     private boolean isGPS;
     private boolean isNetwork;
-    private boolean isSent=false;
+    private boolean isSent = false;
     private boolean isRealTime = true; //using volley jsonObject or jsonArray
     private boolean isReorientation = true;
     private boolean isAuto = false;
@@ -94,23 +100,24 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
     private boolean isContinue = true;
     private int countData = 0;
     private float latitude, longitude;
-    private int id_user=2;
+    private int id_user = 2;
     private int last_id;
+    private float bearing, declination;
     private Statistics c;
     final String URL = "http://128.199.235.115/api/accelerometer";
     final String URL2 = "http://128.199.235.115/api/array";
     final String URL3 = "http://128.199.235.115/api/id_block";
     final String URL4 = "http://128.199.235.115/api/location";
-    private double[] stdv = new double[20];
+    private double[] stdv = new double[10];
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
-    private long t=0;
-    private long countHole=0,countBump=0;
+    private long t = 0;
+    private long countHole = 0, countBump = 0;
     public LinkedList<JSONObject> q;
 
     public static float LPF_ALPHA = 0.8f;
-    private float [] linearAcceleration = new float[] {0, 0, 0, 0};
-    private float [] Rotate = new float[16];
+    private float[] linearAcceleration = new float[]{0, 0, 0, 0};
+    private float[] Rotate = new float[16];
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -133,26 +140,35 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
 
     }
 
-    public void locationFunc(){
+    public void locationFunc() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},MY_PERMISSIONS_REQUEST);
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},PERMISSION_REQUEST_COARSE_LOCATION);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
             android.os.Process.killProcess(android.os.Process.myPid());
             return;
         }
         lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
-
+        locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 latitude = (float) location.getLatitude();
-                longitude =(float)  location.getLongitude();
+                longitude = (float) location.getLongitude();
+                tv_bearing.setText(String.valueOf(location.getBearing()));
+                bearing = location.getBearing();
+                geoField = new GeomagneticField(
+                        latitude,
+                        longitude,
+                        Double.valueOf(location.getAltitude()).floatValue(),
+                        System.currentTimeMillis()
+                );
                 timeLocation = System.currentTimeMillis();
-                if(location!=null && location.hasSpeed()){
-                    speed = location.getSpeed()*3.6;
+                tv_bearing.append(" " + String.valueOf(geoField.getDeclination()));
+                declination = geoField.getDeclination();
+                if (location != null && location.hasSpeed()) {
+                    speed = location.getSpeed() * 3.6;
                     tv_speed.setText(String.format("%.3f", speed));
                 }
                 displayLocation();
-                Log.d("location", "lat: "+ latitude + " lon: "+ longitude+ " speed: "+String.format("%.3f", speed));
+                Log.d("location", "lat: " + latitude + " lon: " + longitude + " speed: " + String.format("%.3f", speed));
             }
 
             public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -172,40 +188,39 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         try {
             this.isGPS = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
             this.isNetwork = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            if(isGPS){
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,locationListener );
+            if (isGPS) {
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                 location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null) {
                     latitude = (float) location.getLatitude();
-                    longitude = (float)  location.getLongitude();
-                    Log.d("location gps","lat:" + latitude +", lon: " +longitude+", speed:"+speed);
+                    longitude = (float) location.getLongitude();
+                    Log.d("location gps", "lat:" + latitude + ", lon: " + longitude + ", speed:" + speed);
                     displayLocation();
                 }
-            }
-            else if(isNetwork){
+            } else if (isNetwork) {
                 lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
                 location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
                 if (location != null) {
                     latitude = (float) location.getLatitude();
-                    longitude = (float)  location.getLongitude();
-                    Log.d("location net","lat:" + latitude +", lon: " +longitude);
+                    longitude = (float) location.getLongitude();
+                    Log.d("location net", "lat:" + latitude + ", lon: " + longitude);
                     displayLocation();
                 }
             }
         } catch (Exception e) {
-            Log.d("location",e.getMessage());// lets the user know there is a problem with the gps           zz
+            Log.d("location", e.getMessage());// lets the user know there is a problem with the gps           zz
         }
     }
 
-    public void sensorFunc(){
+    public void sensorFunc() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success!
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-            Log.d("sensor","accelerometer success");
+            Log.d("sensor", "accelerometer success");
         } else {
             Log.d("sensor", "accelerometer failed");
         }
@@ -214,7 +229,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
             // success!
             magnometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
             sensorManager.registerListener(this, magnometer, SensorManager.SENSOR_DELAY_UI);
-            Log.d("sensor","magnometer success");
+            Log.d("sensor", "magnometer success");
         } else {
             Log.d("sensor", "magnometer failed");
         }
@@ -241,6 +256,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         tv_locationid = (TextView) findViewById(R.id.tv_locationid);
         tv_jumlah_bump = (TextView) findViewById(R.id.tv_jumlah_bump);
         tv_jumlah_hole = (TextView) findViewById(R.id.tv_jumlah_hole);
+        tv_bearing = (TextView) findViewById(R.id.tv_bearing);
 
         sentBtn = (Button) findViewById(R.id.btn_sent);
         holeBtn = (Button) findViewById(R.id.btn_hole);
@@ -250,29 +266,30 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         modeBtn = (Button) findViewById(R.id.btn_mode);
         setBtn = (Button) findViewById(R.id.btn_set);
         sentarrayBtn = (Button) findViewById(R.id.btn_sent_array);
+
+        mpBump = MediaPlayer.create(getApplicationContext(),);
         sentarrayBtn.setVisibility(View.INVISIBLE);
         tv_mode.setText("ON");
     }
 
-    public void initializeButton(){
+    public void initializeButton() {
         setBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 max = Double.parseDouble(etMaxtresh.getText().toString());
                 min = Double.parseDouble(etMintresh.getText().toString());
-                tv_maxmin.setText("Max: "+ etMaxtresh.getText().toString()+" Min:"+etMintresh.getText().toString());
+                tv_maxmin.setText("Max: " + etMaxtresh.getText().toString() + " Min:" + etMintresh.getText().toString());
             }
         });
         modeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isRealTime){
+                if (isRealTime) {
                     modeBtn.setText("ON");
                     tv_mode.setText("OFF");
                     sentarrayBtn.setVisibility(View.VISIBLE);
                     isRealTime = false;
-                }
-                else {
+                } else {
                     modeBtn.setText("OFF");
                     tv_mode.setText("ON");
                     isRealTime = true;
@@ -283,7 +300,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         sentarrayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!isRealTime){
+                if (!isRealTime) {
                     try {
                         postArrayData();
                         countData = 0;
@@ -297,17 +314,16 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         });
         sentBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!isSent){
+                if (!isSent) {
                     isSent = true;
-                    x=1;
+                    x = 1;
                     try {
                         postLocation(1);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     status.setText("Normal");
-                }
-                else {
+                } else {
                     isSent = false;
                     status.setText("Not Sent");
                     last_id++;
@@ -317,17 +333,16 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         });
         holeBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!isSent){
+                if (!isSent) {
                     isSent = true;
-                    x=5;
+                    x = 5;
                     status.setText("Hole");
                     try {
                         postLocation(5);
                     } catch (JSONException e) {
-                    e.printStackTrace();
+                        e.printStackTrace();
                     }
-                }
-                else {
+                } else {
                     isSent = false;
                     status.setText("Not Sent");
                     last_id++;
@@ -337,17 +352,16 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         });
         bumpBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!isSent){
+                if (!isSent) {
                     isSent = true;
-                    x=6;
+                    x = 6;
                     status.setText("Bump");
                     try {
                         postLocation(6);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                }
-                else {
+                } else {
                     isSent = false;
                     status.setText("Not Sent");
                     last_id++;
@@ -358,7 +372,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         orieantationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isReorientation){
+                if (isReorientation) {
                     isReorientation = false;
                     orieantationBtn.setText("REORIENTATION");
                     Context context = getApplicationContext();
@@ -368,8 +382,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
 
-                }
-                else {
+                } else {
                     isReorientation = true;
                     orieantationBtn.setText("ORIENTATION");
                 }
@@ -378,15 +391,14 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         autoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isAuto){
+                if (isAuto) {
                     isAuto = false;
                     autoBtn.setText("AUTO");
                     status.setText("Manual");
                     holeBtn.setVisibility(View.VISIBLE);
                     sentBtn.setVisibility(View.VISIBLE);
                     bumpBtn.setVisibility(View.VISIBLE);
-                }
-                else{
+                } else {
                     isAuto = true;
                     autoBtn.setText("Manual");
                     status.setText("Auto");
@@ -398,17 +410,23 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
         });
 
     }
+
     //onResume() register the accelerometer for listening the events
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         sensorManager.registerListener(this, magnometer, SensorManager.SENSOR_DELAY_UI);
+        locationFunc();
     }
 
     //onPause() unregister the accelerometer for stop listening the events
     protected void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        lm.removeUpdates(locationListener);
     }
 
     protected void onDestroy(){
@@ -547,7 +565,7 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
                 q.removeFirst();
             }
             /*Event Detection*/
-            if((axisZ > max || axisZ < min ) && isContinue){
+            if((axisZ > max || axisZ < min ) && isContinue && speed > 1 ){
                 if( (pastZ - axisZ) < 0 ){
                     isBump = true;
                     isContinue = false;
@@ -621,16 +639,18 @@ public class MainActivity extends  AppCompatActivity implements SensorEventListe
 
                 // Transposed matrix
                 float[] Rt = new float[16];
-
                 // TODO: http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])
                 // says that R*gravity = [0 0 g] but the calculation only seems to work when we invert the Rotation matrix
                 SensorManager.getRotationMatrix(Rotate, null, gravities, magnometers);
                 Matrix.transposeM(Rt, 0, Rotate, 0);
                 Matrix.multiplyMV(earthAcceleration, 0, Rt, 0, linearAcceleration, 0);
+                /*if(bearing!= 0 && declination !=0){
+                    Matrix.rotateM(earthAcceleration,0,bearing-declination,1f,1f,0);
+                }*/
                 axisX = earthAcceleration[0];
                 axisY = earthAcceleration[1];
                 axisZ = earthAcceleration[2];
-                // Log.d("sensor Orie ",String.format("%.4f", axisX)+" " + String.format("%.4f", axisY)+" "+  String.format("%.4f", axisZ));
+                Log.d("sensor Orie ",String.format("%.4f", axisX)+" " + String.format("%.4f", axisY)+" "+  String.format("%.4f", axisZ));
             }
             pastX = aX;
             pastY = aY;

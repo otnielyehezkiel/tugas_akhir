@@ -398,8 +398,12 @@
                     android:id="@+id/tv_jumlah_bump"/>
                 <TextView
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="4"
-                    android:layout_height="wrap_content"/>
+                    android:id="@+id/tv_bearing"
+                    android:textSize="12dp"
+                    android:textColor="@color/md_teal_800"
+                    />
             </LinearLayout>
         </LinearLayout>
 
