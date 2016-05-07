@@ -278,6 +278,10 @@ class Maps extends CI_Controller{
 	public function graph_new(){
 		$id = $this->input->get('id');
 		$acc = $this->acc_model->getAccel($id);
+		if(empty($acc)) {
+			echo "Data Kosong";
+			die();
+		}
 		$jenis = $this->acc_model->getJenis($id)[0]->jenis_id;
 		$validasi = $this->acc_model->getJenis($id)[0]->validasi;
 		$axisZ = array();

@@ -124,7 +124,8 @@ class Classification extends CI_Controller{
                 $marker['position'] = $row[0].", ".$row[1];
                 $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
                 $marker['draggable'] = FALSE;
-                $marker['icon'] = base_url('/assets/images/break_marker.png');
+                $marker['icon'] = base_url('/assets/images/bump_marker.png');
+                $this->googlemaps->add_marker($marker);
                 array_push($sumX,$row[0]);
                 array_push($sumY,$row[1]);
                 array_push($polygon['points'], "{$row[0]}, {$row[1]}");
@@ -138,7 +139,7 @@ class Classification extends CI_Controller{
                     $marker['position'] = (array_sum($sumX)/count($sumX)).", ".(array_sum($sumY)/count($sumY));
                     $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
                     $marker['draggable'] = FALSE;
-                    $marker['icon'] = base_url('/assets/images/normal_marker.png');
+                    $marker['icon'] = base_url('/assets/images/true_bump.png');
                     $this->googlemaps->add_marker($marker);
                 }
                 $polygon['strokeColor'] = '#8E24AA';
@@ -151,7 +152,8 @@ class Classification extends CI_Controller{
                 $marker['position'] = $row[0].", ".$row[1];
                 $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
                 $marker['draggable'] = FALSE;
-                $marker['icon'] = base_url('/assets/images/break_marker.png');
+                $marker['icon'] = base_url('/assets/images/bump_marker.png');
+                $this->googlemaps->add_marker($marker);
                 array_push($sumX,$row[0]);
                 array_push($sumY,$row[1]);
                 array_push($polygon['points'], "{$row[0]}, {$row[1]}");
