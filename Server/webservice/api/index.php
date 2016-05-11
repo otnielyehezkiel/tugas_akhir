@@ -10,19 +10,88 @@ $app->get('/data','getData');
 $app->get('/id_block','getBlockId');
 $app->post('/array','insertArray');
 $app->post('/location','insertLocation');
+$app->post('/alldata','insertAll');
+
+function insertAll(){
+	$request = \Slim\Slim::getInstance()->request();
+	$data = json_decode($request->getBody());
+	$sql = "INSERT INTO location (lat, lon, jenis_id,user_id) VALUES (:lat, :lon, :jenis_id,:user_id) RETURNING id";
+	try {
+		$db = getDB();
+		$db->beginTransaction();
+		$stmt = $db->prepare($sql);  
+		$stmt->bindParam("lat", $data{0}->lat);
+		$stmt->bindParam("lon", $data{0}->lon);
+		$stmt->bindParam("jenis_id", $data{0}->jenis_id);
+		$stmt->bindParam("user_id", $data{0}->user_id);
+		$stmt->execute();
+		$id = $stmt->fetch(PDO::FETCH_OBJ);
+		if(empty($id)) {
+			$db->rollBack();
+		}
+	} catch(PDOException $e) {
+		echo json_encode('{"error":{"text":'. $e->getMessage() .'}}');
+		$db->rollBack();
+	}
+
+	unset($data{0});
+
+	$i = 0;
+	foreach($data as $obj){
+		$sql = "INSERT INTO acc_data (lat, lon, x, y, z, waktu,  location_id) VALUES (:lat, :lon, :x, :y, :z, :waktu, :location_id)";
+		try {
+
+			$stmt = $db->prepare($sql);  
+			$stmt->bindParam("lat", $obj->lat);
+			$stmt->bindParam("lon", $obj->lon);
+			$stmt->bindParam("x", $obj->x);
+			$stmt->bindParam("y", $obj->y);
+			$stmt->bindParam("z", $obj->z);
+			$stmt->bindParam("waktu", $obj->waktu);
+			$stmt->bindParam("location_id",$id->id);
+			$stmt->execute();
+			$status[$i] = "SUCCESS";	
+		} catch(PDOException $e) {
+			echo json_encode('{"error":{"text":'. $e->getMessage() .'}}');
+			$db->rollBack();
+		}
+		$i++; 
+	}
+	// Mengechek apakah berhasil di-insert semua
+	$j=0; $k=0;
+	for($x=0;$x<$i;$x++){
+		if($status[$x]=="SUCCESS")
+			$k++;
+		else $j++;
+	}
+	if($j==0){
+		$db->commit();
+		$test['STATUS']="SUCCESS ".$k;
+	}
+	else {
+		$test['STATUS']="GAGAL ".$j;
+		$db->rollBack();
+	}
+	echo json_encode(array_values($test));	
+
+	$db = null;
+}
 
 function getBlockId(){
-	$sql = "SELECT max(id) FROM location ";
+	$sql = "SELECT max(id) as id FROM location ";
+	$query = "SELECT max(location_id) as loc_id FROM acc_data";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);  
 		$data = $stmt->fetch(PDO::FETCH_OBJ);
-		//print_r($users);
-		// echo '{"data": ' . json_encode($data) . '}';
-		if($data) {
-            //echo json_encode($data);
-            print_r(json_encode($data));
-            //print_r($data);
+		$q = $db->query($query);
+		$id = $q->fetch(PDO::FETCH_OBJ);
+		if($data->id == $id->loc_id) {
+            echo json_encode($data);
+        }
+        else {
+        	$data->id = -1;
+        	echo json_encode($data);
         }
         $db = null;
 	} catch(PDOException $e) {

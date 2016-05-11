@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer;
     private Sensor gravity;
     private Sensor magnometer;
-    private MediaPlayer mpBump, mpHole;
+    private MediaPlayer mpBump, mpHole, mpNotsame;
 
     private long timestamp;
     private long pastTime;
@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float pastX = 0;
     private float pastY = 0;
     private float pastZ = 0;
+
+    private int checkLocationSent, checkDataSent;
 
     private double speed;
 
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float bearing, declination;
     private Statistics c;
     final String URL = "http://128.199.235.115/api/accelerometer";
-    final String URL2 = "http://128.199.235.115/api/array";
+    final String URL2 = "http://128.199.235.115/api/alldata";
     final String URL3 = "http://128.199.235.115/api/id_block";
     final String URL4 = "http://128.199.235.115/api/location";
     private double[] stdv = new double[10];
@@ -267,7 +269,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setBtn = (Button) findViewById(R.id.btn_set);
         sentarrayBtn = (Button) findViewById(R.id.btn_sent_array);
 
-        mpBump = MediaPlayer.create(getApplicationContext(),);
+        mpBump = MediaPlayer.create(getApplicationContext(), R.raw.bump);
+        mpHole = MediaPlayer.create(getApplication(),R.raw.hole);
+        mpNotsame = MediaPlayer.create(getApplication(),R.raw.notsame);
+
         sentarrayBtn.setVisibility(View.INVISIBLE);
         tv_mode.setText("ON");
     }
@@ -318,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isSent = true;
                     x = 1;
                     try {
-                        postLocation(1);
+                        addLocation(1);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -338,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     x = 5;
                     status.setText("Hole");
                     try {
-                        postLocation(5);
+                        addLocation(5);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -357,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     x = 6;
                     status.setText("Bump");
                     try {
-                        postLocation(6);
+                        addLocation(6);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -565,11 +570,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 q.removeFirst();
             }
             /*Event Detection*/
-            if((axisZ > max || axisZ < min ) && isContinue && speed > 1 ){
+            if((axisZ > max || axisZ < min ) && isContinue  && speed >1){
                 if( (pastZ - axisZ) < 0 ){
                     isBump = true;
                     isContinue = false;
                     Log.d("flag","Bump "+ String.valueOf(isContinue));
+                    mpBump.start();
                     t = timestamp;
                     countData = 0;
                     status.setText("BUMP ");
@@ -579,7 +585,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     tv_jumlah_bump.setTextColor(Color.RED);
                     tv_jumlah_hole.setTextColor(Color.BLACK);
                     try {
-                        postLocation(3);
+                        addLocation(3);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -589,6 +595,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     isHole = true;
                     isContinue = false;
                     Log.d("flag","Hole "+ String.valueOf(isContinue));
+                    mpHole.start();
                     t = timestamp;
                     countData = 0;
                     status.setText("HOLE ");
@@ -598,7 +605,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     tv_jumlah_hole.setTextColor(Color.RED);
                     tv_jumlah_bump.setTextColor(Color.BLACK);
                     try {
-                        postLocation(2);
+                        addLocation(2);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -719,37 +726,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 });
         ApplicationController.getInstance().addToRequestQueue(jsArrRequest);
     }
-    /*Method Post Location*/
-    public void postLocation(int jenis_id) throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put("lat", Float.toString(latitude));
-        obj.put("lon", Float.toString(longitude));
-        obj.put("jenis_id",jenis_id);
-        obj.put("user_id", id_user);
 
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL4,obj,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Context context = getApplicationContext();
-                        CharSequence text = response.toString();
-                        int duration = Toast.LENGTH_SHORT;
-
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
-                        Log.d("response", response.toString());
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("volley: ", error.toString());
-
-                    }
-                });
-        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
-
-    }
     /*Method Get last_id*/
     public void getLastId() throws JSONException{
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, URL3, null,
@@ -759,8 +736,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     // display response
                     Log.d("response", response.toString());
                     try {
-                        last_id = response.getInt("max");
+                        last_id = response.getInt("id");
                         tv_locationid.setText(Integer.toString(last_id));
+                        if(last_id == -1){
+                            tv_locationid.setText("Tidak Sama");
+                            mpNotsame.start();
+                        }
                         Context context = getApplicationContext();
                         CharSequence text = response.toString();
                         int duration = Toast.LENGTH_SHORT;
@@ -805,11 +786,48 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             obj.put("y", Float.toString(y));
             obj.put("z", Float.toString(z));
             obj.put("waktu", Long.toString(time));
-            obj.put("location_id",last_id+1);
             dataAcc.put(obj);
             countData++;
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+    /*Method Post Location*/
+    public void postLocation(int jenis_id) throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("lat", Float.toString(latitude));
+        obj.put("lon", Float.toString(longitude));
+        obj.put("jenis_id",jenis_id);
+        obj.put("user_id", id_user);
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL4,obj,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Context context = getApplicationContext();
+                        CharSequence text = response.toString();
+                        int duration = Toast.LENGTH_SHORT;
+
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
+                        Log.d("response", response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("volley: ", error.toString());
+
+                    }
+                });
+        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
+    }
+    public void addLocation(int jenis_id) throws JSONException{
+        JSONObject obj = new JSONObject();
+        obj.put("lat", Float.toString(latitude));
+        obj.put("lon", Float.toString(longitude));
+        obj.put("jenis_id",jenis_id);
+        obj.put("user_id", id_user);
+        dataAcc.put(obj);
     }
 }

@@ -2,7 +2,7 @@
 import psycopg2
 import sys
 import numpy
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import SpectralClustering 
 import scipy.spatial.distance
 import os
 import stat
@@ -25,10 +25,9 @@ X = numpy.array(r)
 T = numpy.delete(X,  numpy.s_[2:3], axis=1)
 Y = numpy.delete(X,  numpy.s_[0:2], axis=1)
 Y = Y.astype(int)
-db = DBSCAN(eps=0.00004, min_samples=1).fit(T)
+db = SpectralClustering(n_clusters=396,eigen_solver='arpack',affinity="nearest_neighbors").fit(T)
 d = T.shape
 print d
-core_samples = db.core_sample_indices_
 labels = db.labels_
 print labels
 

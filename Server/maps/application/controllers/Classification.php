@@ -100,7 +100,7 @@ class Classification extends CI_Controller{
     public function cluster(){
         // cluster data bump
         $path =  getcwd() ;
-        $command = escapeshellcmd("python ".$path."/application/controllers/test.py 2>&1");
+        $command = escapeshellcmd("python ".$path."/application/controllers/agglomerative.py 2>&1");
         $output = shell_exec($command); 
         // get hasil label
         $label = array_map('str_getcsv', file('./assets/images/foo.csv'));
