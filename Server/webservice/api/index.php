@@ -11,6 +11,36 @@ $app->get('/id_block','getBlockId');
 $app->post('/array','insertArray');
 $app->post('/location','insertLocation');
 $app->post('/alldata','insertAll');
+$app->post('/getuser','userId');
+
+function userId(){
+	$request = \Slim\Slim::getInstance()->request();
+	$data = json_decode($request->getBody());
+
+	$sql = "INSERT INTO users (nama,device) VALUES (:nama,:device) RETURNING id";
+	$query = "SELECT id FROM users where nama = '". $data->nama."'";
+	try {
+		$db = getDB();
+		$stmt = $db->query($query);  
+		$id = $stmt->fetch(PDO::FETCH_OBJ);
+		if(empty($id)){
+			$q = $db->prepare($sql);  
+			$q->bindParam("nama", $data->nama);
+			$q->bindParam("device", $data->device);
+			$q->execute();
+			$status['STATUS']="Sudah di-Insert";
+			$dat = $q->fetch(PDO::FETCH_OBJ);
+			$status['ID']=$dat->id;
+		}
+		else $status['ID']=$id->id;
+		$db = null;
+		echo json_encode($status);
+	} catch(PDOException $e) {
+		echo json_encode('{"error":{"text":'. $e->getMessage() .'}}');
+	}
+}
+
+
 
 function insertAll(){
 	$request = \Slim\Slim::getInstance()->request();

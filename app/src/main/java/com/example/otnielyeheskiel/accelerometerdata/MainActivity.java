@@ -15,6 +15,7 @@ import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.opengl.Matrix;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     final String URL2 = "http://128.199.235.115/api/alldata";
     final String URL3 = "http://128.199.235.115/api/id_block";
     final String URL4 = "http://128.199.235.115/api/location";
+    final String URL_USER = "http://128.199.235.115/api/getuser";
     private double[] stdv = new double[10];
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
@@ -120,6 +122,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static float LPF_ALPHA = 0.8f;
     private float[] linearAcceleration = new float[]{0, 0, 0, 0};
     private float[] Rotate = new float[16];
+
+    private String android_id,device;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -134,12 +138,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //sensor function
         sensorFunc();
         dataAcc = new JSONArray();
+
+        android_id = Settings.Secure.getString(this.getContentResolver(),Settings.Secure.ANDROID_ID);
+        device = android.os.Build.MODEL;
+        Log.d("android_id",android_id+" "+device);
         try {
             getLastId();
+            //getUserId();
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     public void locationFunc() {
@@ -383,6 +391,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     Context context = getApplicationContext();
                     CharSequence text = Integer.toString(last_id);
                     int duration = Toast.LENGTH_SHORT;
+                    try {
+                        getUserId();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
 
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
@@ -792,36 +805,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
     }
-    /*Method Post Location*/
-    public void postLocation(int jenis_id) throws JSONException {
-        JSONObject obj = new JSONObject();
-        obj.put("lat", Float.toString(latitude));
-        obj.put("lon", Float.toString(longitude));
-        obj.put("jenis_id",jenis_id);
-        obj.put("user_id", id_user);
 
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL4,obj,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Context context = getApplicationContext();
-                        CharSequence text = response.toString();
-                        int duration = Toast.LENGTH_SHORT;
-
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
-                        Log.d("response", response.toString());
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("volley: ", error.toString());
-
-                    }
-                });
-        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
-    }
     public void addLocation(int jenis_id) throws JSONException{
         JSONObject obj = new JSONObject();
         obj.put("lat", Float.toString(latitude));
@@ -830,4 +814,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         obj.put("user_id", id_user);
         dataAcc.put(obj);
     }
+
+    /*Method Get last_id*/
+    public void getUserId() throws JSONException{
+        JSONObject obj = new JSONObject();
+        obj.put("nama", android_id);
+        obj.put("device",device);
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST,URL_USER,obj,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            id_user = response.getInt("ID");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d("getuserid", response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("volley: ", error.toString());
+                    }
+                });
+        ApplicationController.getInstance().addToRequestQueue(jsObjRequest);
+    }
+
+
 }
