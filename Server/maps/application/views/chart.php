@@ -18,6 +18,7 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 		mean = <?php echo $mean ?> <br>
 		max = <?php echo $max ?> <br>
 		min = <?php echo $min ?> <br>
+		waktu = <?php echo date('d/m/Y H:i:s', ($timestamp/1000)); ?> <br>
 		</div>
 		<div class="six columns">
 		max-min = <?php echo $diffmaxmin ?> <br>

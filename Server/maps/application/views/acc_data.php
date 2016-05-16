@@ -19,6 +19,7 @@
 		mean = <?php echo $mean ?> <br>
 		max = <?php echo $max ?> <br>
 		min = <?php echo $min ?> <br>
+		waktu = <?php echo date('m/d/Y H:i:s', $timestamp); ?> <br>
 		</div>
 		<div class="six columns">
 		max-min = <?php echo $diffmaxmin ?> <br>

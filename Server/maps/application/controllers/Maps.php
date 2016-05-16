@@ -315,6 +315,7 @@ class Maps extends CI_Controller{
 		$data['count'] = count($axisZ);
 		$data['durasi'] =  $acc[count($axisZ)-1]['waktu'] - $acc[0]['waktu'];
 		$data['validasi'] = ($validasi == 0 ? 'Belum Divalidasi' : 'Sudah Divalidasi');
+		$data['timestamp'] = $timestamp;
 		if($jenis == 3) 
 			$data['jenis'] = "Bump";
 		elseif($jenis == 2) 

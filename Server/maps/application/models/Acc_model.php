@@ -56,6 +56,13 @@ class Acc_Model extends CI_Model {
         return $query;
     }
 
+    function updateAfterCluster(){
+        $query = $this->db->query('UPDATE location
+            set validasi = 1
+            WHERE validasi = 0'.$id)->result();
+        return $query;
+    }
+
     function getPredictData($id){
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.z 
             FROM acc_data a, location l 

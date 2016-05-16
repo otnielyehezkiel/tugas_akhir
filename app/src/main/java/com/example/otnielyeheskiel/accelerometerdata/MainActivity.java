@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private double alpha;
     private double beta;
 
+    private double roll,pitch,magnitude,yaw;
+
     private float axisX = 0;
     private float axisY = 0;
     private float axisZ = 0;
@@ -118,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private long t = 0;
     private long countHole = 0, countBump = 0;
     public LinkedList<JSONObject> q;
+
 
     public static float LPF_ALPHA = 0.8f;
     private float[] linearAcceleration = new float[]{0, 0, 0, 0};
@@ -339,6 +342,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 } else {
                     isSent = false;
                     status.setText("Not Sent");
+                    try {
+                        postArrayData();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     last_id++;
                     tv_locationid.setText(Integer.toString(last_id));
                 }
@@ -358,6 +366,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 } else {
                     isSent = false;
                     status.setText("Not Sent");
+                    try {
+                        postArrayData();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     last_id++;
                     tv_locationid.setText(Integer.toString(last_id));
                 }
@@ -457,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void fillData(){
-        if(isBump && ((timestamp - t) < 2000) && !isContinue){
+        if(isBump && ((timestamp - t) < 1500) && !isContinue){
             addObject(axisX,axisY,axisZ,timestamp);
         }
         else if(isBump){
@@ -476,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("flag","-----");
         }
 
-        if(isHole && ((timestamp - t) < 2000) && !isContinue){
+        if(isHole && ((timestamp - t) < 1500) && !isContinue){
             addObject(axisX,axisY,axisZ,timestamp);
         }
         else if(isHole){
@@ -576,14 +589,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         e.printStackTrace();
                     }
                 }
-                //Log.d("test= ","------");
                 c = new Statistics(stdv);
                 std = c.getStdDev();
                 Log.d("statistic std= ",String.format("%.4f", std));
                 q.removeFirst();
             }
             /*Event Detection*/
-            if((axisZ > max || axisZ < min ) && isContinue  && speed >1){
+            if((axisZ > max || axisZ < min )
+                    && isContinue
+                    && speed > 1
+                    ){
                 if( (pastZ - axisZ) < 0 ){
                     isBump = true;
                     isContinue = false;
@@ -635,14 +650,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             // reorientation
             if(isReorientation ){
                 timestamp = System.currentTimeMillis();
-                alpha= Math.atan2(aY,aZ);
+
+                roll = 2*Math.atan2(aZ,Math.hypot(aX,aX)+aX);
+                pitch = 2*Math.atan2(aZ,Math.hypot(aY,aY)+aY);
+                rotation(roll,0,2,accelerometers);
+                rotation(pitch,1,2,accelerometers);
+                magnitude = Math.hypot(accelerometers[0],accelerometers[1]);
+                yaw = magnitude;
+                rotation(roll,0,2,accelerometers);
+                rotation(pitch,1,2,accelerometers);
+                rotation(yaw,0,1,accelerometers);
+                axisX = accelerometers[0];
+                axisY = accelerometers[1];
+                axisZ = accelerometers[2];
+                /*alpha= Math.atan2(aY,aZ);
                 beta = Math.atan2(( -aX),(Math.hypot(aY,aZ)));
                 axisX = (float) ((Math.cos(beta) * aX) + (Math.sin(beta) * Math.sin(alpha) * aY) +
                         (Math.cos(alpha) * Math.sin(beta) * aZ));
                 axisY = (float) (Math.cos(alpha) * aY - Math.sin(alpha) * aZ);
-                axisZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);
-
-
+                axisZ = (float) (-(Math.sin(beta) * aX) + (Math.cos(beta) * Math.sin(alpha) * aY) + Math.cos(beta) * Math.cos(alpha) * aZ);*/
                 // Log.d("sensor Reor ",String.format("%.4f", axisX)+" " + String.format("%.4f", axisY)+" "+ String.format("%.4f", axisZ));
             }
             else{
@@ -656,20 +682,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 linearAcceleration[2] = aZ ;
 
                 float [] earthAcceleration = new float[] {0, 0, 0, 0};
-
+                float [] has = new float[] {0, 0, 0, 0};
                 // Transposed matrix
                 float[] Rt = new float[16];
+                float[] matrix = new float[16];
+                float[] m = new float[16];
+                Matrix.setIdentityM(matrix, 0);
                 // TODO: http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])
                 // says that R*gravity = [0 0 g] but the calculation only seems to work when we invert the Rotation matrix
                 SensorManager.getRotationMatrix(Rotate, null, gravities, magnometers);
                 Matrix.transposeM(Rt, 0, Rotate, 0);
                 Matrix.multiplyMV(earthAcceleration, 0, Rt, 0, linearAcceleration, 0);
                 /*if(bearing!= 0 && declination !=0){
-                    Matrix.rotateM(earthAcceleration,0,bearing-declination,1f,1f,0);
+
                 }*/
-                axisX = earthAcceleration[0];
-                axisY = earthAcceleration[1];
-                axisZ = earthAcceleration[2];
+                Matrix.rotateM(matrix,0,230,1f,1f,1f);
+                Matrix.multiplyMV(has, 0, matrix, 0, earthAcceleration, 0);
+                axisX = has[0];
+                axisY = has[1];
+                axisZ = has[2];
                 Log.d("sensor Orie ",String.format("%.4f", axisX)+" " + String.format("%.4f", axisY)+" "+  String.format("%.4f", axisZ));
             }
             pastX = aX;
@@ -689,6 +720,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
         displayCurrentValues();
+    }
+    public void rotation(double radAngle, int x, int y, float[] vectors){
+        vectors[y] = (float)(vectors[x]*Math.sin(radAngle) + vectors[y]*Math.cos(radAngle));
+        vectors[x] = (float)(vectors[x]*Math.cos(radAngle) - vectors[y]*Math.sin(radAngle));
     }
     /*Method Post RealTime Data Accelerometer*/
     public void postAccelData() throws JSONException {
