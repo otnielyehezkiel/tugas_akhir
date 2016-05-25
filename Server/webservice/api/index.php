@@ -12,7 +12,7 @@ $app->post('/array','insertArray');
 $app->post('/location','insertLocation');
 $app->post('/alldata','insertAll');
 $app->post('/getuser','userId');
-
+//dipake
 function userId(){
 	$request = \Slim\Slim::getInstance()->request();
 	$data = json_decode($request->getBody());
@@ -40,8 +40,7 @@ function userId(){
 	}
 }
 
-
-
+//dipake
 function insertAll(){
 	$request = \Slim\Slim::getInstance()->request();
 	$data = json_decode($request->getBody());

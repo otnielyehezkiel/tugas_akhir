@@ -17,10 +17,14 @@ class Classification extends CI_Controller{
         $flag = 0;
     	$axisZ = array();
     	$axisZ[$c] = array();
+        $axisY[$c] = array();
     	$train = array();
+        $length = count($data); 
     	foreach($data as $row){
-    		if($row->id == $id){
+            $length--;
+    		if($row->id == $id && $length!=0){
     			array_push($axisZ[$c],$row->z); 
+                array_push($axisY[$c],$row->y); 
                 if($flag == 0){
                     $flag = 1;
                     $jenis = $row->jenis_id;
@@ -29,55 +33,140 @@ class Classification extends CI_Controller{
     	        }	
             }
             elseif(count($axisZ[$c])!=1) {
+                if($length == 0){
+                    array_push($axisZ[$c],$row->z); 
+                    array_push($axisY[$c],$row->y); 
+                }
+                // sumbu Z
     			$statistics = new Statistics();
     			$statistics->addSet($axisZ[$c]);
-				$std = $statistics->getStdDeviation();
-				$mean = $statistics->getMean();
+				$stdZ = $statistics->getStdDeviation();
+				$meanZ = $statistics->getMean();
 				$max = $statistics->getMax();
 				$min = $statistics->getMin();
-                $deviasi = $max-$min;	
+                $deviasiZ = $max-$min;
+                $statistics = null;
+                // sumbu Y
+                $statistics = new Statistics();
+                $statistics->addSet($axisY[$c]);
+                $stdY = $statistics->getStdDeviation();
+                $meanY = $statistics->getMean();
+                $max = $statistics->getMax();
+                $min = $statistics->getMin();
+                $deviasiY = $max-$min;	
 				$train[$c] = array();
-				array_push($train[$c],$jenis);
+                // extract feature
+				array_push($train[$c],$jenis,$stdZ,$deviasiZ,$meanZ,$stdY,$deviasiY,$meanY);
                 $flag = 0;
-                array_push($train[$c],$std);  //feature 1
-                array_push($train[$c],$deviasi); //feature 2
-                array_push($train[$c],$mean); //feature 3
                 $statistics = null;
     			$id	= $row->id;
     			$c++;
     			$axisZ[$c] = array();	
+                $axisY[$c] = array();   
     			array_push($axisZ[$c],$row->z); 
+                array_push($axisY[$c],$row->y); 
     		}
-
     	}
-		
-        $id = 312;
+		$c++;
+        $train[$c] = array();
+        $weights = array();
+        $weights[4] = 0.5;
+        $weight[3]= 0.5;
+        array_push($train[$c],0.5);
+        $id = 869;
         $dataPredict = $this->acc_model->getPredictData($id);
         $axisZ = array();
+        $axisY = array();
         foreach($dataPredict as $row) {
             array_push($axisZ,$row->z);
+            array_push($axisY,$row->y);
         }
+        // sumbu z
         $statistics = new Statistics();
         $statistics->addSet($axisZ);
-        $std = $statistics->getStdDeviation();
-        $mean = $statistics->getMean();
+        $stdZ = $statistics->getStdDeviation();
+        $meanZ = $statistics->getMean();
         $max = $statistics->getMax();
         $min = $statistics->getMin();
-        $deviasi = $max-$min;   
+        $deviasiZ = $max-$min;
+        $statistics = null;
+        // sumbu y
+        $statistics = new Statistics();
+        $statistics->addSet($axisY);
+        $stdY = $statistics->getStdDeviation();
+        $meanY = $statistics->getMean();
+        $max = $statistics->getMax();
+        $min = $statistics->getMin();
+        $deviasiY = $max-$min;
+        $statistics = null; 
+
         $predict = array();
-        $predict[1] = $std;
-        $predict[2] = $deviasi;
-        $predict[3] = $mean;
+        $predict[1] = $stdZ;
+        $predict[2] = $deviasiZ;
+        $predict[3] = $meanZ;
+        $predict[4] = $stdY;
+        $predict[5] = $deviasiY;
+        $predict[6] = $meanY;
         //die(var_dump($predict));
         $svm = new SVM();
-        $start = microtime(true);
-    	$model = $svm->train($train);
-        $time_elapsed_secs = microtime(true) - $start;
-        echo $time_elapsed_secs;
-    	$result = $model->predict($predict);
+        // $start = microtime(true);
+        $weights = array();
+        $weights[0] = 0.5;
+        $weights[1] = 0.5;
+        // array_push($train, $weights);
+        $model = $svm->crossvalidate($train);
+        var_dump($model);
+    	//$model = $svm->train($train,$weights);
+        // $time_elapsed_secs = microtime(true) - $start;
+        // echo $time_elapsed_secs;
+    	/*$result = $model->predict($predict);
         if($model->save('./assets/images/model.svm'))
+        var_dump($result); */
+    }
 
-    	var_dump($result);
+    public function predict(){
+        // get predict data
+        // $id = 869;
+        $id = $this->input->get('id');
+        $dataPredict = $this->acc_model->getPredictData($id);
+        $axisZ = array();
+        $axisY = array();
+        foreach($dataPredict as $row) {
+            array_push($axisZ,$row->z);
+            array_push($axisY,$row->y);
+        }
+        // sumbu z
+        $statistics = new Statistics();
+        $statistics->addSet($axisZ);
+        $stdZ = $statistics->getStdDeviation();
+        $meanZ = $statistics->getMean();
+        $max = $statistics->getMax();
+        $min = $statistics->getMin();
+        $deviasiZ = $max-$min;
+        $statistics = null;
+        // sumbu y
+        $statistics = new Statistics();
+        $statistics->addSet($axisY);
+        $stdY = $statistics->getStdDeviation();
+        $meanY = $statistics->getMean();
+        $max = $statistics->getMax();
+        $min = $statistics->getMin();
+        $deviasiY = $max-$min;
+        $statistics = null; 
+
+        $predict = array();
+        $predict[1] = $stdZ;
+        $predict[2] = $deviasiZ;
+        $predict[3] = $meanZ;
+        $predict[4] = $stdY;
+        $predict[5] = $deviasiY;
+        $predict[6] = $meanY;
+        //die(var_dump($predict));
+        $svm = new SVMModel();
+        $model = $svm->load('./assets/images/model.svm');
+        $result = $svm->predict($predict);
+        // if($model->save('./assets/images/model.svm'))
+        var_dump($result); 
     }
 
     public function test(){
@@ -93,8 +182,6 @@ class Classification extends CI_Controller{
         $test =  array(1 => 0.43, 5 => 0.12, 94 => 0.2);
         $result = $svm->predict($test);
         var_dump($result);
-
-        
     }
 
     public function cluster(){
@@ -119,70 +206,41 @@ class Classification extends CI_Controller{
         $sumX = array(); 
         $sumY = array();
         $ct = 0;
-        foreach($label as $row){ 
-            if($row[3] == $i_label){
-                $marker['position'] = $row[0].", ".$row[1];
-                $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
-                $marker['draggable'] = FALSE;
-                $marker['icon'] = base_url('/assets/images/bump_marker.png');
-                $this->googlemaps->add_marker($marker);
-                array_push($sumX,$row[0]);
-                array_push($sumY,$row[1]);
-                array_push($polygon['points'], "{$row[0]}, {$row[1]}");
+        foreach($label as $row => $col){
+            $marker['position'] = $col[0].", ".$col[1];
+            $marker['infowindow_content'] = "<b>id:</b>" .$col[2]. "<br><b>label:</b>".$col[3];
+            $marker['draggable'] = FALSE;
+            $marker['icon'] = base_url('/assets/images/bump_marker.png');
+            $this->googlemaps->add_marker($marker);
+            array_push($sumX,$col[0]);
+            array_push($sumY,$col[1]);
+            array_push($polygon['points'], "{$col[0]}, {$col[1]}");
+            if(isset($label[$row+1]) && ($col[3] == $label[$row+1][3])){
                 $ct++;
             }
             else{
-                if($ct == 1)  {
-                    $this->googlemaps->add_marker($marker);
+                if($ct==0){
+                    $polygon['points'] = array();
+                    $sumX = array();
+                    $sumY = array();       
                 }
                 else {
                     $marker['position'] = (array_sum($sumX)/count($sumX)).", ".(array_sum($sumY)/count($sumY));
-                    $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
+                    $marker['infowindow_content'] = "<b>id:</b>" .$col[2]. "<br><b>label:</b>".$col[3];
                     $marker['draggable'] = FALSE;
                     $marker['icon'] = base_url('/assets/images/true_bump.png');
                     $this->googlemaps->add_marker($marker);
+                    $polygon['strokeColor'] = '#8E24AA';
+                    $polygon['fillColor'] = '#FF3F80';
+                    $this->googlemaps->add_polygon($polygon);
                 }
-                $polygon['strokeColor'] = '#8E24AA';
-                $polygon['fillColor'] = '#FF3F80';
-                $this->googlemaps->add_polygon($polygon);
                 $polygon['points'] = array();
                 $sumX = array();
-                $sumY = array();
-                $i_label = $row[3];
-                $marker['position'] = $row[0].", ".$row[1];
-                $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
-                $marker['draggable'] = FALSE;
-                $marker['icon'] = base_url('/assets/images/bump_marker.png');
-                $this->googlemaps->add_marker($marker);
-                array_push($sumX,$row[0]);
-                array_push($sumY,$row[1]);
-                array_push($polygon['points'], "{$row[0]}, {$row[1]}");
-                $ct=1;
+                $sumY = array();       
+                $ct=0;
             }
         }
-        /*$polygon = array();
-        $polygon['points'] = array();
-        $i_label = $label[1][3];
-        $marker = array();
-        foreach($label as $row){ 
-            // add position to marker           
-            $marker['position'] = $row[0].", ".$row[1];
-            $marker['infowindow_content'] = "<b>id:</b>" .$row[2]. "<br><b>label:</b>".$row[3];
-            $marker['draggable'] = FALSE;
-            $this->googlemaps->add_marker($marker);
-            // add polygone to every label
-            if($row[3] == $i_label){
-                array_push($polygon['points'], "{$row[0]}, {$row[1]}");
-            }
-            else{
-                $polygon['strokeColor'] = '#8E24AA';
-                $polygon['fillColor'] = '#FF3F80';
-                $this->googlemaps->add_polygon($polygon);
-                $polygon['points'] = array();
-                $i_label = $row[3];
-                array_push($polygon['points'], "{$row[0]}, {$row[1]}");
-            }
-        }*/
+       
         $data['map'] = $this->googlemaps->create_map();
         $this->load->view('gmaps',$data);
     }

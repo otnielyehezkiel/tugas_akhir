@@ -2,9 +2,12 @@
 <html>
 <head><?php echo $map['js']; ?></head>
 <body>
-<div style="height:1000px;">
+<div id="text"> 
+</div>
+<div style="height:auto;">
 	<?php echo $map['html']; ?>
 </div>
+
 
 </body>
 </html>

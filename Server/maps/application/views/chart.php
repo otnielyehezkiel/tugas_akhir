@@ -9,7 +9,7 @@
 <br>
 <div class="container">
 Data Accelerometer <?php echo $jenis ." id=". $id; ?>
-<div id="graph" style="width:1000px; height:300px;">
+<div id="graph" style="width:700px; height:300px;">
 </div>
 	<div class="row">
 		<h6>
@@ -39,6 +39,16 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 		</div>
 		<div class="two columns">
 			<a class="button" href="<?php echo base_url('/maps/updateValidasi/?value=false&id='.$id)?>">False</a>
+		</div>
+	</div>
+	<div class="row" >
+		<div class="four columns" style="text-align: center;">
+			<h5>Predict<h5>
+		</div>
+	</div>
+	<div class="row" >
+		<div class="one columns">
+			<a class="button" href="<?php echo base_url('/classification/predict/?id='.$id)?>">Predict</a>
 		</div>
 	</div>
 </div>

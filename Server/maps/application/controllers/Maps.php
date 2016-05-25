@@ -19,6 +19,9 @@ class Maps extends CI_Controller{
 	   	$config['center'] = '-7.2859516, 112.795845';
 		$config['zoom'] = '13';
 		$config['map_height'] = '550px';
+		$config['maxzoom'] = '20';
+		$config['minify'] ='TRUE';
+		$config['onclick'] = 'document.getElementById(\'text\').innerHTML = event.latLng.lat() + \', \' + event.latLng.lng();';
 		$this->googlemaps->initialize($config);
 		/*Polyline
 		$polyline = array();
@@ -33,7 +36,7 @@ class Maps extends CI_Controller{
 	   	foreach ($loc as $row){
 	   		//echo $row->jenis_id;
 	   		if($row->jenis_id == 3){
-	   			$marker['icon'] = base_url('/assets/images/bump_marker.png');
+	   			$marker['icon'] = base_url('/assets/images/blue_dot.png');
 	   		}
 	   		elseif($row->jenis_id == 4){
 	   			$marker['icon'] = base_url('/assets/images/break_marker.png');	
@@ -42,7 +45,7 @@ class Maps extends CI_Controller{
 	   			$marker['icon'] = base_url('/assets/images/true_hole.png');		
 	   		}
 	   		elseif($row->jenis_id == 6){
-				$marker['icon'] = base_url('/assets/images/true_bump.png');	
+				$marker['icon'] = base_url('/assets/images/red_dot.png');	
 	   		}
 	   		elseif($row->jenis_id == 2){ 
 	   			$marker['icon'] = base_url('/assets/images/hole_marker.png');
