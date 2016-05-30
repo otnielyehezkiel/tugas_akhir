@@ -21,7 +21,7 @@ class Acc_Model extends CI_Model {
     	$query = $this->db->query('SELECT lat,lon,id,jenis_id 
             FROM location --l, acc_data a
 	   		WHERE 
-            (id >= 825 and id <=834 )
+            (id >= 924 and id <= 937)
              or 
              jenis_id = 6
             --ORDER BY l.id ASC')->result();
@@ -54,7 +54,8 @@ class Acc_Model extends CI_Model {
     function getTrainingData(){
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.x, a.z, a.y 
             FROM acc_data a, location l 
-            WHERE a.location_id = l.id and l.id >= 864 and l.id <= 891
+            WHERE a.location_id = l.id and l.id >= 825 
+            and l.id <= 891
             ORDER BY l.id ASC')->result();
         return $query;
     }
@@ -67,9 +68,19 @@ class Acc_Model extends CI_Model {
     }
 
     function getPredictData($id){
+        $query = $this->db->query('SELECT l.id, l.jenis_id, a.z, a.y
+            FROM acc_data a, location l 
+            WHERE a.location_id = l.id and l.id ='.$id
+            )->result();
+        return $query;
+    }
+
+    function getPredict(){
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y
             FROM acc_data a, location l 
-            WHERE a.location_id = l.id and l.id ='.$id)->result();
+            WHERE a.location_id = l.id and
+            (l.id >= 924 and l.id <= 937)
+            ')->result();
         return $query;
     }
 

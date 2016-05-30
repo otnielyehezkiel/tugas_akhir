@@ -25,7 +25,7 @@ X = numpy.array(r)
 T = numpy.delete(X,  numpy.s_[2:3], axis=1)
 Y = numpy.delete(X,  numpy.s_[0:2], axis=1)
 Y = Y.astype(int)
-db = Birch(branching_factor=2, n_clusters=None, threshold=0.00009).fit(T)
+db = Birch(branching_factor=2, n_clusters=None, threshold=0.00005).fit(T)
 d = T.shape
 print d
 labels = db.labels_

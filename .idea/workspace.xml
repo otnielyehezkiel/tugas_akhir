@@ -25,16 +25,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b5b909bc-fe5a-4834-afb2-620c47c4e1e2" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Reference TA/Buku TA/5112100212-Otniel-Yehezkiel-Buku_TA_Bab_3.docx" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/controllers/Classification.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/controllers/Maps.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/controllers/birch.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/models/Acc_model.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/views/chart.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Server/maps/application/views/gmaps.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/otnielyeheskiel/accelerometerdata/GsonRequest.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/otnielyeheskiel/accelerometerdata/MainActivity.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/otnielyeheskiel/accelerometerdata/MainActivity.java" />
     </list>
     <ignored path="AccelerometerData.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -79,7 +70,7 @@
       <file leaf-file-name="MainActivity.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/otnielyeheskiel/accelerometerdata/MainActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3325792">
+            <state vertical-scroll-proportion="0.42250532">
               <caret line="786" column="86" selection-start-line="786" selection-start-column="82" selection-end-line="786" selection-end-column="86" />
               <folding>
                 <element signature="method#onResume#0;class#MainActivity#0" expanded="false" />
@@ -1835,16 +1826,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
+      <pane id="Scratches" />
+      <pane id="ProjectPane" />
       <pane id="AndroidView">
         <subPane>
           <PATH>
@@ -1865,9 +1848,10 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="ProjectPane" />
       <pane id="PackagesPane" />
-      <pane id="Scratches" />
+      <pane id="Scope">
+        <subPane subId="Project Files" />
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -2718,7 +2702,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/otnielyeheskiel/accelerometerdata/MainActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3325792">
+        <state vertical-scroll-proportion="0.42250532">
           <caret line="786" column="86" selection-start-line="786" selection-start-column="82" selection-end-line="786" selection-end-column="86" />
           <folding>
             <element signature="method#onResume#0;class#MainActivity#0" expanded="false" />

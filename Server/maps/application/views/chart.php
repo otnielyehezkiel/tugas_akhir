@@ -48,7 +48,7 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 	</div>
 	<div class="row" >
 		<div class="one columns">
-			<a class="button" href="<?php echo base_url('/classification/predict/?id='.$id)?>">Predict</a>
+			<a class="button" href="<?php echo base_url('/classification/predict_id/?id='.$id)?>">Predict</a>
 		</div>
 	</div>
 </div>
