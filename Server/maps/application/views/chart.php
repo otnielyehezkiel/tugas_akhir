@@ -59,6 +59,9 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
     "http://128.199.235.115/project/assets/images/file.csv",
     {
 		labels: [ "timestamp", "x", "y", "z"],
+		legend: "always",
+		xlabel: "Time (second)",
+		ylabel: "Acceleration (m/s²)",
 		rollPeriod: 0
     }
   );

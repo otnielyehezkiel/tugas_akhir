@@ -21,7 +21,8 @@ class Acc_Model extends CI_Model {
     	$query = $this->db->query('SELECT lat,lon,id,jenis_id 
             FROM location --l, acc_data a
 	   		WHERE 
-            (id >= 924 and id <= 937)
+            (id >= 924 and id <= 937 and jenis_id=3)
+            -- id >=1005
              or 
              jenis_id = 6
             --ORDER BY l.id ASC')->result();
@@ -79,7 +80,8 @@ class Acc_Model extends CI_Model {
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y
             FROM acc_data a, location l 
             WHERE a.location_id = l.id and
-            (l.id >= 924 and l.id <= 937)
+            -- (l.id >= 924 and l.id <= 937)
+            l.id >= 1005 
             ')->result();
         return $query;
     }
@@ -98,6 +100,24 @@ class Acc_Model extends CI_Model {
         }
         $this->db->where('id',$data['id']);
         return $this->db->update('location',$arr);
+    }
+
+    function lihatData(){
+        $query = $this->db->query('SELECT lat,lon,id,jenis_id
+            FROM location 
+            WHERE 
+            id >=1005
+             or 
+             jenis_id = 6
+            --ORDER BY l.id ASC')->result_array();
+        return $query;
+    }
+
+    function getTanggal($id){
+        $query = $this->db->query('SELECT waktu
+            FROM acc_data
+            WHERE location_id = '.$id. 'LIMIT 1')->result_array();
+        return $query;
     }
 
 }

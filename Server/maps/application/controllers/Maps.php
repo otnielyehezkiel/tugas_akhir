@@ -21,7 +21,7 @@ class Maps extends CI_Controller{
 		$config['map_height'] = '550px';
 		$config['maxzoom'] = '20';
 		$config['minify'] ='TRUE';
-		$config['onclick'] = 'document.getElementById(\'text\').innerHTML = event.latLng.lat() + \', \' + event.latLng.lng();';
+		// $config['onclick'] = 'document.getElementById(\'text\').innerHTML = event.latLng.lat() + \', \' + event.latLng.lng();';
 		$this->googlemaps->initialize($config);
 		/*Polyline
 		$polyline = array();
@@ -340,6 +340,34 @@ class Maps extends CI_Controller{
 		$data['value'] = $this->input->get('value');
 		if($this->acc_model->updateValidasi($data))
 			echo "berhasil";
+	}
+
+	public function lihatData(){
+		$data = $this->acc_model->lihatData();
+		$xdata = array();
+		$xdata['id'] = array();
+		$xdata['lat'] = array();
+		$xdata['lon'] = array();
+		$xdata['jenis_id'] = array();
+		$xdata['tanggal'] = array();
+		$c = 0;
+		foreach ($data as $row) {
+			$tanggal = $this->acc_model->getTanggal($row['id']);
+			if($tanggal){
+				$xdata['tanggal'][]=$tanggal[0]['waktu'];
+			} 
+			else{
+				$xdata['tanggal'][]=0;
+			}
+			$xdata['id'][]=$row['id'];
+			$xdata['lat'][]=$row['lat'];
+			$xdata['lon'][]=$row['lon'];
+			$xdata['jenis_id'][]=$row['jenis_id'];
+			$c++;
+		}
+		//var_dump($data);
+		$xdata['total'] = $c;
+		$this->load->view('lihatdata',$xdata);
 	}
 
 	
