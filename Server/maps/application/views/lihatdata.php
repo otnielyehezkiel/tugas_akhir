@@ -4,6 +4,21 @@
 <link rel="stylesheet" href="<?php echo base_url('/assets/css/bootstrap.min.css')?>">
 <link rel="stylesheet" href="<?php echo base_url('/assets/css/bootstrap-theme.min.css')?>">
 <script src="<?php echo base_url('/assets/css/jquery.min.js')?>"></script>	
+<script src="<?php echo base_url('/assets/css/DataTables/media/js/jquery.dataTables.min.js')?>"></script>	
+<script src="<?php echo base_url('/assets/css/DataTables/media/js/dataTables.bootstrap.min.js')?>"></script>	
+<link rel="stylesheet" href="<?php echo base_url('/assets/css/DataTables/media/css/dataTables.bootstrap.min.css')?>">
+
+<script type="text/javascript">
+$(document).ready(function(){
+        $('#myTable').DataTable({
+        	"searching": false,
+        	"pageLength": 10,
+        	"info" : false,
+        	"bLengthChange": false,
+        });
+    });
+</script>
+
 </head>
 <body>
 
@@ -20,14 +35,17 @@
 </nav>
 <div class="container">
 	<div class="table-responsive">
-	<table class="table table-bordered">
+	<table id="myTable" class="table table-bordered">
+		<thead> 
 		<tr>
 			<th> No </th>
 			<th> Jenis Bump </th>
 			<th> Latitude </th>
 			<th> Longitude </th>
 			<th> Waktu Terdeteksi </th>
+			<th>  </th>
 		</tr>
+		</thead> 
 		<?php 
 			for($i=0;$i<$total;$i++){
 				$x = $i+1;
@@ -38,6 +56,7 @@
 				}else{
 					$jenis_id[$i] = "Gundukan";
 				}
+				$url = base_url('/maps/graph_new/'). "?id=".$id[$i];
 				$tanggal[$i] =  date('d/m/Y H:i:s', ($tanggal[$i]/1000));
 				echo "<tr>
 						<td>" .$x."</td>
@@ -45,6 +64,7 @@
 						<td>" .$lat[$i]. "</td>
 						<td>" .$lon[$i]. "</td>
 						<td>" .$tanggal[$i]. "</td>
+						<td> <a role='button' class='btn btn-default btn-sm' href='" .$url. "'>view</a></td>
 					</tr>";
 			}
 		?>

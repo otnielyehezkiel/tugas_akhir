@@ -21,7 +21,7 @@ class Acc_Model extends CI_Model {
     	$query = $this->db->query('SELECT lat,lon,id,jenis_id 
             FROM location --l, acc_data a
 	   		WHERE 
-            (id >= 924 and id <= 937 and jenis_id=3)
+            (id >= 1096 and id <= 1112 and jenis_id=3)
             -- id >=1005
              or 
              jenis_id = 6
@@ -80,24 +80,18 @@ class Acc_Model extends CI_Model {
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y
             FROM acc_data a, location l 
             WHERE a.location_id = l.id and
-            -- (l.id >= 924 and l.id <= 937)
-            l.id >= 1005 
+            l.id >= 1053 and l.id <= 1070
+            -- l.id >= 1005 
             ')->result();
         return $query;
     }
 
     function updateValidasi($data){
-        if($data['value']=='true'){
-            $arr = array(
-                'validasi' => '1'
-            );
-        }
-        else {
-            $arr = array(
-                'validasi' => '1',
-                'jenis_id' => '4'
-            );
-        }
+        $jenis_id = $data['value'];
+        $arr = array(
+            'validasi' => '2',
+            'jenis_id' => $jenis_id
+        );
         $this->db->where('id',$data['id']);
         return $this->db->update('location',$arr);
     }

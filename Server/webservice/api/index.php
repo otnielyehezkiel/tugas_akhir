@@ -153,7 +153,7 @@ function insertLocation() {
 }
 
 function getData(){
-	$sql = "SELECT * FROM acc_data ";
+	$sql = "SELECT * FROM cluster ";
 	try {
 		$db = getDB();
 		$stmt = $db->query($sql);  
@@ -161,10 +161,7 @@ function getData(){
 		//print_r($users);
 		// echo '{"data": ' . json_encode($data) . '}';
 		if($data) {
-            echo json_encode($data);
-            $status['STATUS']="SUCCESS";
-            echo json_encode($status);
-            //print_r($data);
+            echo json_encode(array_values($data));
             $db = null;
         }
 	} catch(PDOException $e) {

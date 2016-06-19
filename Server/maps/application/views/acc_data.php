@@ -11,7 +11,5 @@
 	<img src="<?php echo base_url('/assets/images/dtree.png"');?>"  style="max-width: 100%; max-height: 100%;" />
 </div>
 
-
-
 </body>
 </html>

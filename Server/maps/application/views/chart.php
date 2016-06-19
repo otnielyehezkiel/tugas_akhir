@@ -9,7 +9,11 @@
 <br>
 <div class="container">
 Data Accelerometer <?php echo $jenis ." id=". $id; ?>
-<div id="graph" style="width:700px; height:300px;">
+<div id="graph" style="width:700px; height:300px;margin-top:30px;">
+</div>
+<div id="graph2" style="width:700px; height:300px;margin-top:30px;">
+</div>
+<div id="graph3" style="width:700px; height:300px;margin-top:30px;">
 </div>
 	<div class="row">
 		<h6>
@@ -62,7 +66,40 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 		legend: "always",
 		xlabel: "Time (second)",
 		ylabel: "Acceleration (m/s²)",
-		rollPeriod: 0
+		rollPeriod: 0,
+		visibility: [false, false, true],
+		valueRange: [-10, 30],
+		axisLabelFontSize: 14
+    }
+  );
+
+  g2 = new Dygraph(
+    document.getElementById("graph2"),
+    "http://128.199.235.115/project/assets/images/file.csv",
+    {
+		labels: [ "timestamp", "x", "y", "z"],
+		legend: "always",
+		xlabel: "Time (second)",
+		ylabel: "Acceleration (m/s²)",
+		rollPeriod: 0,
+		visibility: [false, true, false],
+		valueRange: [-10, 30],
+		axisLabelFontSize: 14
+    }
+  );
+
+  g3 = new Dygraph(
+    document.getElementById("graph3"),
+    "http://128.199.235.115/project/assets/images/file.csv",
+    {
+		labels: [ "timestamp", "x", "y", "z"],
+		legend: "always",
+		xlabel: "Time (second)",
+		ylabel: "Acceleration (m/s²)",
+		rollPeriod: 0,
+		visibility: [true, false, false],
+		valueRange: [-10, 30],
+		axisLabelFontSize: 14
     }
   );
 </script>
