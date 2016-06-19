@@ -258,7 +258,7 @@ class Classification extends CI_Controller{
         $map_label = array();
         $this->load->library('googlemaps');
         $config['center'] = '-7.2859516, 112.795845';
-        $config['zoom'] = '13';
+        $config['zoom'] = '15';
         $config['map_height'] = '550px';
         $config['maxzoom'] = '20';
         $this->googlemaps->initialize($config);

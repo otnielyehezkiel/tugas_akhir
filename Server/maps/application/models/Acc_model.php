@@ -17,6 +17,13 @@ class Acc_Model extends CI_Model {
     	return $query;
     }
 
+    function getHasil(){
+        $query = $this->db->query('SELECT lat,lon,id,jenis_id 
+            FROM location 
+            WHERE validasi = 2')->result();
+        return $query;
+    }
+
     function getBumpLocation() {
     	$query = $this->db->query('SELECT lat,lon,id,jenis_id 
             FROM location --l, acc_data a
