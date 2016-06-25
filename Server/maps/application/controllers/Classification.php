@@ -151,6 +151,7 @@ class Classification extends CI_Controller{
         $command = escapeshellcmd("python ".$path."/application/controllers/decisiontree.py 2>&1");
         $output = shell_exec($command); 
         echo $output;
+        echo "haha";
     }
 
     public function predict_id(){
@@ -276,7 +277,7 @@ class Classification extends CI_Controller{
             $marker['infowindow_content'] = "<b>id:</b>" .$col[2]. "<br><b>label:</b>".$col[3];
             $marker['draggable'] = FALSE;
             $marker['icon'] = base_url('/assets/images/red_dot.png');
-            // $this->googlemaps->add_marker($marker);
+            $this->googlemaps->add_marker($marker);
             array_push($sumX,$col[0]);
             array_push($sumY,$col[1]);
             array_push($polygon['points'], "{$col[0]}, {$col[1]}");
@@ -297,7 +298,7 @@ class Classification extends CI_Controller{
                     $this->googlemaps->add_marker($marker);
                     $polygon['strokeColor'] = '#8E24AA';
                     $polygon['fillColor'] = '#FF3F80';
-                    // $this->googlemaps->add_polygon($polygon);
+                    $this->googlemaps->add_polygon($polygon);
                 }
                 $polygon['points'] = array();
                 $sumX = array();

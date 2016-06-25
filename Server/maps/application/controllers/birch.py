@@ -15,7 +15,10 @@ except:
 cur = conn.cursor()
 
 try:
-    cur.execute("""SELECT DISTINCT lat,lon,id from location where id>=825 and jenis_id=3""")
+    cur.execute("""SELECT DISTINCT lat,lon,id from location 
+                    where id>=825 and jenis_id=3 and
+                    validasi = 1
+                    """)
 except:
     print "I can't SELECT"
 r = cur.fetchall()
@@ -72,4 +75,5 @@ conn.close()
 
 # Save data to csv file
 numpy.savetxt("/var/www/project/assets/images/foo.csv", data, fmt=['%.7f', '%.7f', '%i', '%i'], delimiter=",")
+sys.exit()
 

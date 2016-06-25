@@ -71,8 +71,10 @@ class Verifikasi extends CI_Controller{
 			$loc = $this->acc_model->getBumpLocation();
 			$marker = array();
 		   	foreach ($loc as $row){
-		   		//echo $row->jenis_id;
-		   		if($row->jenis_id == 3){
+		   		if($row->validasi == 2){
+		   			$marker['icon'] = base_url('/assets/images/yellow_marker.png');
+		   		}
+		   		elseif($row->jenis_id == 3 && $row->validasi != 2){
 		   			$marker['icon'] = base_url('/assets/images/bump_marker.png');
 		   		}
 		   		elseif($row->jenis_id == 4){
@@ -91,7 +93,7 @@ class Verifikasi extends CI_Controller{
 		   			$marker['icon'] = base_url('/assets/images/normal_marker.png');
 		   		}
 		   		$marker['position'] = "{$row->lat}, {$row->lon}";
-				$marker['infowindow_content'] = "{$row->id}";
+				$marker['infowindow_content'] = "Bump <br><i>id={$row->id}</i>";
 				$marker['draggable'] = FALSE;
 				$marker['ondblclick'] = "
 					$.ajax({

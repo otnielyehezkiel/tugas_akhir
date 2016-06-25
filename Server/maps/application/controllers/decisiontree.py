@@ -50,10 +50,12 @@ print hasil
 conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.235.115' password='otniel'")
 cur = conn.cursor()
 for row in hasil:
+	cur.execute("UPDATE location SET validasi = (%s) WHERE id = (%s)",(1,row[0]))
 	if row[1] != row[2]:
-		# cur.execute("UPDATE location SET jenis_id = (%s) WHERE id = (%s)",(row[1],row[0]))
+		cur.execute("UPDATE location SET jenis_id = (%s) WHERE id = (%s)",(row[1],row[0]))
 		print "a"
 
 conn.commit()
 cur.close()
 conn.close()
+sys.exit()

@@ -1,7 +1,6 @@
 package com.example.otnielyeheskiel.bumprecord;
 
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -22,15 +21,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.opengl.Matrix;
-import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,7 +48,7 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor magnometer;
-    private MediaPlayer mpBump,  mpNotsame;
+    private MediaPlayer mpBump;
 
     private long timestamp;
     private double max = 17, min = 3;
@@ -74,9 +68,7 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
     private float gravities[] = new float[3];
     private float accelerometers[] = new float[5];
     private float magnometers[] = new float[3];
-    private TextView currentX, currentY, currentZ, status, lon, lat, tv_timestamp,tv_data, tv_speed, tv_std, tv_locationid;
-    private TextView tv_jumlah_hole, tv_jumlah_bump, tv_bearing;
-    private double std;
+    private TextView currentX, currentY, currentZ, tv_status, lon, lat, tv_timestamp,tv_speed,tv_jumlah_bump;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     protected LocationManager lm;
@@ -167,11 +159,10 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
             public void onLocationChanged(Location location) {
                 latitude = (float) location.getLatitude();
                 longitude = (float) location.getLongitude();
-                tv_bearing.setText(String.valueOf(location.getBearing()));
                 bearing = location.getBearing();
                 count_bearing++;
                 if (count_bearing > 1) {
-                    if (Math.abs(avg_bearing - bearing) > 20) {
+                    if (Math.abs(avg_bearing - bearing) > 5) {
                         avg_bearing = 0;
                         count_bearing = 1;
                     }
@@ -184,9 +175,8 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
                         Double.valueOf(location.getAltitude()).floatValue(),
                         System.currentTimeMillis()
                 );
-                tv_bearing.append(" " + String.valueOf(geoField.getDeclination()));
                 declination = geoField.getDeclination();
-                if (location != null && location.hasSpeed()) {
+                if (location.hasSpeed()) {
                     speed = location.getSpeed() * 3.6;
                     tv_speed.setText(String.format("%.3f", speed));
                 }
@@ -267,28 +257,22 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
         lat = (TextView) view.findViewById(R.id.lat);
 
         tv_timestamp = (TextView) view.findViewById(R.id.tv_timestamp);
-        tv_std = (TextView) view.findViewById(R.id.tv_std);
-        status = (TextView) view.findViewById(R.id.tv_status);
-        tv_data = (TextView) view.findViewById(R.id.tv_data);
+        tv_status = (TextView) view.findViewById(R.id.tv_status);
         tv_speed = (TextView) view.findViewById(R.id.speed);
-        tv_locationid = (TextView) view.findViewById(R.id.tv_locationid);
         tv_jumlah_bump = (TextView) view.findViewById(R.id.tv_jumlah_bump);
-        tv_jumlah_hole = (TextView) view.findViewById(R.id.tv_jumlah_hole);
-        tv_bearing = (TextView) view.findViewById(R.id.tv_bearing);
-
 
         mpBump = MediaPlayer.create(activity.getApplicationContext(), R.raw.bump);
-        mpNotsame = MediaPlayer.create(activity.getApplication(), R.raw.notsame);
     }
 
     public void fillData() {
         if (isBump && ((timestamp - t) < 1500) && !isContinue) {
+            tv_status.setText("Bump");
             addObject(axisX, axisY, axisZ, timestamp);
         } else if (isBump) {
             Log.d("flag", "Bump_selesai");
             isBump = false;
             isContinue = true;
-            status.setText("NORMAL");
+            tv_status.setText("Normal");
             try {
                 postArrayData();
             } catch (JSONException e) {
@@ -296,7 +280,6 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
             }
             dataAcc = new JSONArray(); // clear data
             last_id++;
-            tv_locationid.setText(Integer.toString(last_id));
         }
     }
 
@@ -365,9 +348,6 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
             axisX = earthAcceleration[0];
             axisY = earthAcceleration[1];
             axisZ = earthAcceleration[2];
-            Log.d("sensor auto ", String.format("%.4f", axisX) + " " +
-                    String.format("%.4f", axisY) + " " +
-                    String.format("%.4f", axisZ));
 
             fillData();
             JSONObject obj = new JSONObject();
@@ -384,7 +364,7 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
             if (q.size() == 10) {
                 q.removeFirst();
             }
-            /*Event Detection*/
+            /*Event Detection with Z-Threshold*/
             if ((axisZ > max || axisZ < min)
                     && isContinue
                     && speed > 1
@@ -395,11 +375,9 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
                 mpBump.start();
                 t = timestamp;
                 countData = 0;
-                status.setText("BUMP ");
+                tv_status.setText("BUMP");
                 countBump++;
                 tv_jumlah_bump.setText(Long.toString(countBump));
-                tv_jumlah_bump.setTextColor(Color.RED);
-                tv_jumlah_hole.setTextColor(Color.BLACK);
                 try {
                     addLocation(3);
                 } catch (JSONException e) {
@@ -445,11 +423,6 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
                         Log.d("response", response.toString());
                         try {
                             last_id = response.getInt("id");
-                            tv_locationid.setText(Integer.toString(last_id));
-                            if (last_id == -1) {
-                                tv_locationid.setText("Tidak Sama");
-                                mpNotsame.start();
-                            }
                             Context context = activity;
                             CharSequence text = response.toString();
                             int duration = Toast.LENGTH_SHORT;
@@ -477,7 +450,6 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
         currentY.setText(String.format("%.5f", axisY));
         currentZ.setText(String.format("%.5f", axisZ));
         tv_timestamp.setText(Long.toString(timestamp));
-        tv_data.setText(Integer.toString(countData));
     }
 
     //display latitude, longitude

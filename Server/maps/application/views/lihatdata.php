@@ -43,7 +43,6 @@ $(document).ready(function(){
 			<th> Latitude </th>
 			<th> Longitude </th>
 			<th> Waktu Terdeteksi </th>
-			<th>  </th>
 		</tr>
 		</thead> 
 		<?php 
@@ -64,7 +63,6 @@ $(document).ready(function(){
 						<td>" .$lat[$i]. "</td>
 						<td>" .$lon[$i]. "</td>
 						<td>" .$tanggal[$i]. "</td>
-						<td> <a role='button' class='btn btn-default btn-sm' href='" .$url. "'>view</a></td>
 					</tr>";
 			}
 		?>

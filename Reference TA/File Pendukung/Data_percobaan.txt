@@ -1,0 +1,11 @@
+Percobaan
+Uji Coba P-01 	start=825 & end=834 
+Uji Coba P-02	start=835 & end=846
+Uji Coba P-03	start=847 & end=852
+Uji Coba P-04	start=864 & end=877
+Uji Coba P-05	start=878 & end=891
+Uji Coba P-06	start=1028 & end=1039
+Uji Coba P-07	start=1053 & end=1070
+Uji Coba P-08	start=1040 & end=1052
+Uji Coba P-09	start=912 & end=923
+Uji Coba P-10	start=924 & end=937
