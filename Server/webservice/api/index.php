@@ -44,7 +44,7 @@ function userId(){
 function insertAll(){
 	$request = \Slim\Slim::getInstance()->request();
 	$data = json_decode($request->getBody());
-	$sql = "INSERT INTO location (lat, lon, jenis_id,user_id) VALUES (:lat, :lon, :jenis_id,:user_id) RETURNING id";
+	$sql = "INSERT INTO location (lat, lon, jenis_id,user_id,percobaan) VALUES (:lat, :lon, :jenis_id,:user_id,:pcb) RETURNING id";
 	try {
 		$db = getDB();
 		$db->beginTransaction();
@@ -53,6 +53,7 @@ function insertAll(){
 		$stmt->bindParam("lon", $data{0}->lon);
 		$stmt->bindParam("jenis_id", $data{0}->jenis_id);
 		$stmt->bindParam("user_id", $data{0}->user_id);
+		$stmt->bindParam("pcb", $data{0}->pcb);
 		$stmt->execute();
 		$id = $stmt->fetch(PDO::FETCH_OBJ);
 		if(empty($id)) {

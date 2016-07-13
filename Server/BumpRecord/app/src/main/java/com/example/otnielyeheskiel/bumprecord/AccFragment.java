@@ -86,10 +86,10 @@ public class AccFragment extends Fragment implements SensorEventListener, Fragme
     private int last_id;
     private float bearing, declination;
     private Statistics c;
-    final String URL = "http://128.199.235.115/api/accelerometer";
-    final String URL2 = "http://128.199.235.115/api/alldata";
-    final String URL3 = "http://128.199.235.115/api/id_block";
-    final String URL_USER = "http://128.199.235.115/api/getuser";
+    final String URL = "http://128.199.232.180/api/accelerometer";
+    final String URL2 = "http://128.199.232.180/api/alldata";
+    final String URL3 = "http://128.199.232.180/api/id_block";
+    final String URL_USER = "http://128.199.232.180/api/getuser";
     private int x = 1;//1 sent normal, 2 hole, 3 bump, 4 break
     public JSONArray dataAcc;
     private long t = 0;

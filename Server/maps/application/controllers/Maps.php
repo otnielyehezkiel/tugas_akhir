@@ -132,12 +132,13 @@ class Maps extends CI_Controller{
 			$row['waktu'] /= 1000;
 			array_push($axisZ,$row['z']);
 		}
-		$fp = fopen('./assets/images/file.csv', 'w');
+		$file = fopen('./assets/images/file.csv', 'w');
+		//print_r($fp);
 		foreach ($acc as $row) {
 			unset($row['location_id']);
-			fputcsv($fp, $row);
+			fputcsv($file, $row);
 		}
-		fclose($fp);
+		fclose($file);
 	}
 
 	public function updateValidasi(){
@@ -190,6 +191,10 @@ class Maps extends CI_Controller{
 			$cdata['start'] = '1096';
 			$cdata['end'] = '1111';
 		}
+		$key =0;
+		if($this->input->get('key')!=null){
+			$key = $this->input->get('key');
+		}
 		
 		$loc = $this->acc_model->getPercobaan($cdata);
 
@@ -198,6 +203,9 @@ class Maps extends CI_Controller{
         $config['zoom'] = '15';
         $config['map_height'] = '550px';
         $config['maxzoom'] = '20';
+        $config['onclick'] = 'document.getElementById(\'coor\').innerHTML=
+        	\'Posisi: \' + parseFloat(event.latLng.lat()).toFixed(9) + \', \' +
+        	parseFloat(event.latLng.lng()).toFixed(9);';
         $this->googlemaps->initialize($config);
 
 		
@@ -207,7 +215,8 @@ class Maps extends CI_Controller{
 	   			if($row->jenis_id ==3){
 	   				$marker['icon'] = base_url('/assets/images/bump_marker.png');
 	   			} else {
-	   				$marker['icon'] = base_url('/assets/images/hole_marker.png');
+	   				if($key == 1) continue;
+	   				$marker['icon'] = base_url('/assets/images/bump_marker.png');
 	   			}
 	   			$marker['ondblclick'] = "
 					$.ajax({
@@ -232,7 +241,6 @@ class Maps extends CI_Controller{
 			$marker['infowindow_content'] = "Bump <br><i>id={$row->id}</i>";
 			$marker['draggable'] = FALSE;
 
-			
 			$this->googlemaps->add_marker($marker);
         }
 

@@ -55,7 +55,6 @@ $(document).ready(function(){
 				}else{
 					$jenis_id[$i] = "Gundukan";
 				}
-				$url = base_url('/maps/graph_new/'). "?id=".$id[$i];
 				$tanggal[$i] =  date('d/m/Y H:i:s', ($tanggal[$i]/1000));
 				echo "<tr>
 						<td>" .$x."</td>

@@ -85,73 +85,76 @@ class Classification extends CI_Controller{
 
     public function predict(){
         $data = $this->acc_model->getPredict();
-        $id = $data[0]->id;
-        $c = 0; 
-        $flag = 0;
-        $axisZ = array();
-        $axisZ[$c] = array();
-        $axisY[$c] = array();
-        $train = array();
-        $length = count($data); 
-        $id_table = 0;
-        foreach($data as $row){
-            $length--;
-            if($row->id == $id && $length!=0){
-                array_push($axisZ[$c],$row->z); 
-                array_push($axisY[$c],$row->y); 
-                if($flag == 0){
-                    $flag = 1;
-                    $jenis = $row->jenis_id;
-                    $id_table = $row->id;
-                }   
-            }
-            elseif(count($axisZ[$c])!=1) {
-                if($length == 0){
+        if($data){
+            $id = $data[0]->id;
+            $c = 0; 
+            $flag = 0;
+            $axisZ = array();
+            $axisZ[$c] = array();
+            $axisY[$c] = array();
+            $train = array();
+            $length = count($data); 
+            $id_table = 0;
+            foreach($data as $row){
+                $length--;
+                if($row->id == $id && $length!=0){
+                    array_push($axisZ[$c],$row->z); 
+                    array_push($axisY[$c],$row->y); 
+                    if($flag == 0){
+                        $flag = 1;
+                        $jenis = $row->jenis_id;
+                        $id_table = $row->id;
+                    }   
+                }
+                elseif(count($axisZ[$c])!=1) {
+                    if($length == 0){
+                        array_push($axisZ[$c],$row->z); 
+                        array_push($axisY[$c],$row->y); 
+                    }
+                    // sumbu Z
+                    $statistics = new Statistics();
+                    $statistics->addSet($axisZ[$c]);
+                    $stdZ = $statistics->getStdDeviation();
+                    $max = $statistics->getMax();
+                    $min = $statistics->getMin();
+                    $deviasiZ = $max-$min;
+                    $statistics = null;
+                    // $skewZ = stats_skew();
+                    // sumbu Y
+                    $statistics = new Statistics();
+                    $statistics->addSet($axisY[$c]);
+                    $stdY = $statistics->getStdDeviation();
+                    $max = $statistics->getMax();
+                    $min = $statistics->getMin();
+                    $deviasiY = $max-$min;  
+                    $train[$c] = array();
+                    // extract feature
+
+                    array_push($train[$c],$stdZ,$deviasiZ,$stdY,$deviasiY,$id_table,$jenis);
+                    $flag = 0;
+                    $statistics = null;
+                    $id = $row->id;
+                    $c++;
+                    $axisZ[$c] = array();   
+                    $axisY[$c] = array();   
                     array_push($axisZ[$c],$row->z); 
                     array_push($axisY[$c],$row->y); 
                 }
-                // sumbu Z
-                $statistics = new Statistics();
-                $statistics->addSet($axisZ[$c]);
-                $stdZ = $statistics->getStdDeviation();
-                $max = $statistics->getMax();
-                $min = $statistics->getMin();
-                $deviasiZ = $max-$min;
-                $statistics = null;
-                // $skewZ = stats_skew();
-                // sumbu Y
-                $statistics = new Statistics();
-                $statistics->addSet($axisY[$c]);
-                $stdY = $statistics->getStdDeviation();
-                $max = $statistics->getMax();
-                $min = $statistics->getMin();
-                $deviasiY = $max-$min;  
-                $train[$c] = array();
-                // extract feature
-
-                array_push($train[$c],$stdZ,$deviasiZ,$stdY,$deviasiY,$id_table,$jenis);
-                $flag = 0;
-                $statistics = null;
-                $id = $row->id;
-                $c++;
-                $axisZ[$c] = array();   
-                $axisY[$c] = array();   
-                array_push($axisZ[$c],$row->z); 
-                array_push($axisY[$c],$row->y); 
             }
-        }
-        // add to csv
-        $fp = fopen(APPPATH .'../assets/images/predict.csv','w');
-        foreach($train as $rows){
-            fputcsv($fp, $rows);
-        }
-        fclose($fp);
+            // add to csv
+            $fp = fopen(APPPATH .'../assets/images/predict.csv','w');
+            foreach($train as $rows){
+                fputcsv($fp, $rows);
+            }
+            fclose($fp);
 
-        $path =  getcwd();
-        $command = escapeshellcmd("python ".$path."/application/controllers/decisiontree.py 2>&1");
-        $output = shell_exec($command); 
-        echo $output;
-        echo "haha";
+            $path =  getcwd();
+            $command = escapeshellcmd("python ".$path."/application/controllers/decisiontree.py 2>&1");
+            $output = shell_exec($command); 
+            echo $output;
+        }
+        else echo "data kosong";
+        
     }
 
     public function predict_id(){

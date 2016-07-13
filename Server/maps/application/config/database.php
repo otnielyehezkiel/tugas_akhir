@@ -74,7 +74,7 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-	'hostname' => 'pgsql:host=128.199.235.115;dbname=project',
+	'hostname' => 'pgsql:host=localhost;dbname=project',
 	'username' => 'postgres',
 	'password' => 'otniel',
 	'database' => 'project',

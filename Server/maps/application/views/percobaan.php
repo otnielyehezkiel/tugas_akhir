@@ -30,12 +30,21 @@
             <li><a href="<?php echo base_url('/maps/percobaan?start=847&end=852')?>">Uji Coba P-03</a></li>
             <li><a href="<?php echo base_url('/maps/percobaan?start=864&end=877')?>">Uji Coba P-04</a></li>
             <li><a href="<?php echo base_url('/maps/percobaan?start=878&end=891')?>">Uji Coba P-05</a></li>
-            <li><a href="<?php echo base_url('/maps/percobaan?start=1028&end=1039')?>">Uji Coba P-06</a></li>
-            <li><a href="<?php echo base_url('/maps/percobaan?start=1053&end=1070')?>">Uji Coba P-07</a></li>
-            <li><a href="<?php echo base_url('/maps/percobaan?start=1040&end=1052')?>">Uji Coba P-08</a></li>
-            <li><a href="<?php echo base_url('/maps/percobaan?start=912&end=923')?>">Uji Coba P-09</a></li>
-            <li><a href="<?php echo base_url('/maps/percobaan?start=924&end=937')?>">Uji Coba P-10</a></li>
-          </ul>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1300&end=1312')?>">Uji Coba P-06</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1327&end=1342')?>">Uji Coba P-07</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1343&end=1356')?>">Uji Coba P-08</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=912&end=923&key=1')?>">Uji Coba P-09</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=924&end=937&key=1')?>">Uji Coba P-10</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=924&end=937&key=1')?>">Uji Coba P-11</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1327&end=1342')?>">Uji Coba P-12</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1344&end=1356')?>">Uji Coba P-13</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1344&end=1356&key=1')?>">Uji Coba P-14</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1271&end=1278&key=1')?>">Uji Coba P-15</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1279&end=1287')?>">Uji Coba P-16</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1288&end=1293')?>">Uji Coba P-17</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1279&end=1287&key=1')?>">Uji Coba P-18</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?start=1288&end=1293&key=1')?>">Uji Coba P-19</a></li>
+          </ul> 
         </li>
     </ul>
   </div>
@@ -67,6 +76,7 @@
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<div id="coor"></div>
 
 <script type="text/javascript">
 
@@ -74,7 +84,7 @@
 
 	g = new Dygraph(
 		document.getElementById("graph"),
-		"http://128.199.235.115/project/assets/images/file.csv",
+		"http://128.199.232.180/project/assets/images/file.csv",
 		{
 			labels: [ "timestamp", "x", "y", "z"],
 			legend: "always",

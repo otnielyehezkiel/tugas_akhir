@@ -78,7 +78,9 @@ class Acc_Model extends CI_Model {
         $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y
             FROM acc_data a, location l 
             WHERE a.location_id = l.id and
-            l.id >= 912 and l.id <= 937 and l.validasi=0 and l.jenis_id = 3
+            -- l.id >= 912 and l.id <= 937 
+            l.id >= 1288 and l.id <= 1293  
+            and l.validasi=0 and l.jenis_id = 3
             ')->result();
         return $query;
     }
@@ -117,7 +119,8 @@ class Acc_Model extends CI_Model {
             FROM location 
             WHERE (id >= ' .$start. ' and  id <= '.$end.' )
              or 
-             (jenis_id = 6 and id <1000)')->result();
+             (jenis_id = 6 
+             and (id <1000 or id > 1350))')->result();
         return $query;
     }
 

@@ -1,0 +1,18 @@
+1. Setting SSH
+https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-putty-on-digitalocean-droplets-windows-users
+
+2. id : root , pass : otniel, IP: 128.199.232.180
+
+3. install apache, install phppgadmin/postgresql
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-phppgadmin-on-ubuntu-12-04
+-> Setting etc/apache2/sites-enabled/
+-> DocumentRoot /var/www
+
+4. open /etc/phppgadmin -> config.inc.php
+change $conf[‘extra_login_security’] = true;    to  false;
+
+5. http://ubuntuserverguide.com/2013/12/how-to-setup-postgresql-database-server-and-phppgadmin-in-ubuntu-server-13-10.html
+
+6. https://www.digitalocean.com/community/tutorials/how-to-install-codeigniter-on-an-ubuntu-12-04-cloud-server
+setting apache2.conf
+setting virtual host

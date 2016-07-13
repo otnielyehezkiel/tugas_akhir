@@ -78,7 +78,7 @@
 
 	g = new Dygraph(
 		document.getElementById("graph"),
-		"http://128.199.235.115/project/assets/images/file.csv",
+		"http://128.199.232.180/project/assets/images/file.csv",
 		{
 			labels: [ "timestamp", "x", "y", "z"],
 			legend: "always",
@@ -91,9 +91,9 @@
 
 	function update(){
 		var val = $("#verifikasi input[type='radio']:checked").val();
-		var id = $.ajax({type: "GET", url: "http://128.199.235.115/project/assets/images/file_id.txt", async: false}).responseText;
+		var id = $.ajax({type: "GET", url: "http://128.199.232.180/project/assets/images/file_id.txt", async: false}).responseText;
         $.ajax({
-            url: 'http://128.199.235.115/project/maps/verifikasi',
+            url: 'http://128.199.232.180/project/maps/verifikasi',
             type: 'POST',
             data: {
             	option:val,

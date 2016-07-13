@@ -3,13 +3,12 @@ import psycopg2
 import sys
 import numpy
 from sklearn import tree
-from sklearn import svm
 import os
 import stat
-from sklearn.externals.six import StringIO  
-import pydot
-from wand.image import Image
-from wand.color import Color
+# from sklearn.externals.six import StringIO  
+# import pydot
+# from wand.image import Image
+# from wand.color import Color
 
 my_data = numpy.genfromtxt( '/var/www/project/assets/images/train.csv', delimiter=',')
 
@@ -20,7 +19,7 @@ clf = tree.DecisionTreeClassifier(class_weight="balanced")
 # clf = svm.LinearSVC(class_weight="balanced")
 clf = clf.fit(X,Y)
 # print(clf.feature_importances_)
-dot_data = StringIO() 
+# dot_data = StringIO() 
 # tree.export_graphviz(clf, out_file=dot_data)
 # graph = pydot.graph_from_dot_data(dot_data.getvalue())
 # graph.write_pdf('/var/www/project/assets/images/dtree.pdf') 
@@ -47,7 +46,7 @@ hasil = hasil.astype(int)
 print hasil
 
 # update data hasil
-conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.235.115' password='otniel'")
+conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.232.180' password='otniel'")
 cur = conn.cursor()
 for row in hasil:
 	cur.execute("UPDATE location SET validasi = (%s) WHERE id = (%s)",(1,row[0]))

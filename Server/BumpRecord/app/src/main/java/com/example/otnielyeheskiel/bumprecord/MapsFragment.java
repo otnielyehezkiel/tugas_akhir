@@ -49,7 +49,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Fragme
 
     protected FragmentActivity activity;
     protected View view;
-    final String URL = "http://128.199.235.115/api/data";
+    final String URL = "http://128.199.232.180/api/data";
     private List<LatLng> centroid;
     private LatLng currentLocation;
 

@@ -235,25 +235,7 @@
                 android:textSize="12dp" />
         </LinearLayout>
     </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="5dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Real Time Mode : "
-            android:textSize="12dp"
-            />
-        <TextView
-            android:id="@+id/tv_mode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="12dp"
-            />
-    </LinearLayout>
+
     <TextView
         android:id="@+id/tv_data"
         android:layout_width="wrap_content"
@@ -262,26 +244,6 @@
         android:layout_gravity="center"
         android:textSize="12dp"
         />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
-        <Button
-            android:id="@+id/btn_mode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="OFF"
-            android:layout_gravity="center"
-            android:theme="@style/MyButton"/>
-        <Button
-            android:id="@+id/btn_sent_array"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sent Data"
-            android:layout_gravity="center"
-            android:theme="@style/MyButton"/>
-    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -301,13 +263,7 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:layout_marginTop="5dp">
-        <Button
-            android:id="@+id/btn_sent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NORMAL"
-            android:layout_gravity="center"
-            android:theme="@style/MyButton"/>
+
         <Button
             android:id="@+id/btn_bump"
             android:layout_width="wrap_content"
@@ -316,10 +272,10 @@
             android:layout_gravity="center"
             android:theme="@style/MyButton"/>
         <Button
-            android:id="@+id/btn_hole"
+            android:id="@+id/btn_speed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="HOLE"
+            android:text="NO SPEED"
             android:layout_gravity="center"
             android:theme="@style/MyButton"/>
     </LinearLayout>
@@ -352,6 +308,15 @@
                     android:textSize="12dp"
                     android:inputType="number"
                     android:theme="@style/MyEditText"/>
+                <EditText
+                    android:id="@+id/et_pcb"
+                    android:layout_width="5dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:hint="pcb"
+                    android:textSize="12dp"
+                    android:inputType="number"
+                    android:theme="@style/MyEditText"/>
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="2"
@@ -369,19 +334,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:textSize="12dp"
-                    android:text="Hole:"/>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/md_red_500"
-                    android:textSize="12dp"
-                    android:id="@+id/tv_jumlah_hole"/>
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"

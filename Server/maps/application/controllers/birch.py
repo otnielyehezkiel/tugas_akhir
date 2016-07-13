@@ -3,12 +3,12 @@ import psycopg2
 import sys
 import numpy
 from sklearn.cluster import Birch
-import scipy.spatial.distance
+# import scipy.spatial.distance
 import os
 import stat
 
 try:
-    conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.235.115' password='otniel'")
+    conn = psycopg2.connect("dbname='project' user='postgres' host='localhost' password='otniel'")
 except:
     print "I am unable to connect to the database"
 
@@ -63,7 +63,7 @@ for i in range(len(z)):
 print centroid
 
 #insert to database
-conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.235.115' password='otniel'")
+conn = psycopg2.connect("dbname='project' user='postgres' host='localhost' password='otniel'")
 cur = conn.cursor()
 cur.execute("DELETE FROM cluster")
 for row in centroid:

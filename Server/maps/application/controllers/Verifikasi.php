@@ -101,7 +101,7 @@ class Verifikasi extends CI_Controller{
 				        url:'".base_url('/maps/addToCsv?id='.$row->id)."',
 				        success: function(response) {
 				            g.updateOptions({ 
-							    'file': 'http://128.199.235.115/project/assets/images/file.csv'
+							    'file': 'http://128.199.232.180/project/assets/images/file.csv'
 							});
 						    $('#myModal').modal();
 							$(document).ready(function () {
@@ -146,7 +146,6 @@ class Verifikasi extends CI_Controller{
 		   		}
 		   		elseif($row->jenis_id == 4){
 		   			$marker['icon'] = base_url('/assets/images/break_marker.png');	
-
 		   		}
 		   		elseif($row->jenis_id == 5){
 		   			$marker['icon'] = base_url('/assets/images/true_hole.png');		
@@ -171,7 +170,7 @@ class Verifikasi extends CI_Controller{
 				        url:'".base_url('/maps/addToCsv?id='.$row->id)."',
 				        success: function(response) {
 				            g.updateOptions({ 
-							    'file': 'http://128.199.235.115/project/assets/images/file.csv'
+							    'file': 'http://128.199.232.180/project/assets/images/file.csv'
 							});
 						    $('#myModal').modal();
 							$(document).ready(function () {

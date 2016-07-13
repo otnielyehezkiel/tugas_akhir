@@ -60,7 +60,7 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 <script type="text/javascript">
   g = new Dygraph(
     document.getElementById("graph"),
-    "http://128.199.235.115/project/assets/images/file.csv",
+    "http://128.199.232.180/project/assets/images/file.csv",
     {
 		labels: [ "timestamp", "x", "y", "z"],
 		legend: "always",
@@ -75,7 +75,7 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 
   g2 = new Dygraph(
     document.getElementById("graph2"),
-    "http://128.199.235.115/project/assets/images/file.csv",
+    "http://128.199.232.180/project/assets/images/file.csv",
     {
 		labels: [ "timestamp", "x", "y", "z"],
 		legend: "always",
@@ -90,7 +90,7 @@ Data Accelerometer <?php echo $jenis ." id=". $id; ?>
 
   g3 = new Dygraph(
     document.getElementById("graph3"),
-    "http://128.199.235.115/project/assets/images/file.csv",
+    "http://128.199.232.180/project/assets/images/file.csv",
     {
 		labels: [ "timestamp", "x", "y", "z"],
 		legend: "always",
