@@ -46,7 +46,7 @@ hasil = hasil.astype(int)
 print hasil
 
 # update data hasil
-conn = psycopg2.connect("dbname='project' user='postgres' host='128.199.232.180' password='otniel'")
+conn = psycopg2.connect("dbname='project' user='postgres' host='localhost' password='otniel'")
 cur = conn.cursor()
 for row in hasil:
 	cur.execute("UPDATE location SET validasi = (%s) WHERE id = (%s)",(1,row[0]))

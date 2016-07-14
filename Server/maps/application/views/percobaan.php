@@ -44,6 +44,7 @@
             <li><a href="<?php echo base_url('/maps/percobaan?start=1288&end=1293')?>">Uji Coba P-17</a></li>
             <li><a href="<?php echo base_url('/maps/percobaan?start=1279&end=1287&key=1')?>">Uji Coba P-18</a></li>
             <li><a href="<?php echo base_url('/maps/percobaan?start=1288&end=1293&key=1')?>">Uji Coba P-19</a></li>
+            <li><a href="<?php echo base_url('/maps/percobaan?pcb=1')?>">Uji Coba P-19</a></li>
           </ul> 
         </li>
     </ul>

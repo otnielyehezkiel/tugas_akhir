@@ -38,11 +38,7 @@ class Classification extends CI_Controller{
                 // sumbu Z
     			$statistics = new Statistics();
     			$statistics->addSet($axisZ[$c]);
-				$stdZ = stats_standard_deviation($axisZ[$c]);
-				// $meanZ = $statistics->getMean();
-                $skewZ = stats_skew($axisZ[$c]);
-                $kurtosisZ = stats_kurtosis($axisZ[$c]);
-                $varianceZ = stats_variance($axisZ[$c]);
+				$stdZ = $statistics->getStdDeviation();
 				$max = $statistics->getMax();
 				$min = $statistics->getMin();
                 $deviasiZ = $max-$min;
@@ -50,11 +46,7 @@ class Classification extends CI_Controller{
                 // sumbu Y
                 $statistics = new Statistics();
                 $statistics->addSet($axisY[$c]);
-                $stdY = stats_standard_deviation($axisY[$c]);
-                // $meanY = $statistics->getMean();
-                $skewY = stats_skew($axisY[$c]);
-                $kurtosisY = stats_kurtosis($axisY[$c]);
-                $varianceY = stats_variance($axisY[$c]);
+                $stdY = $statistics->getStdDeviation();
                 $max = $statistics->getMax();
                 $min = $statistics->getMin();
                 $deviasiY = $max-$min;
@@ -146,6 +138,7 @@ class Classification extends CI_Controller{
             foreach($train as $rows){
                 fputcsv($fp, $rows);
             }
+            echo $fp;
             fclose($fp);
 
             $path =  getcwd();

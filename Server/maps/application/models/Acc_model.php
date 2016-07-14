@@ -74,12 +74,14 @@ class Acc_Model extends CI_Model {
         return $query;
     }
 
+    /*Predict Data with Decision Tree*/
     function getPredict(){
-        $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y
+        $query = $this->db->query('SELECT l.id, l.jenis_id, a.z , a.y, l.percobaan
             FROM acc_data a, location l 
             WHERE a.location_id = l.id and
             -- l.id >= 912 and l.id <= 937 
-            l.id >= 1288 and l.id <= 1293  
+            -- l.id >= 1288 and l.id <= 1293
+            l.percobaan = 15  
             and l.validasi=0 and l.jenis_id = 3
             ')->result();
         return $query;
@@ -113,14 +115,28 @@ class Acc_Model extends CI_Model {
     }
 
     function getPercobaan($data){
-        $start = $data['start'];
-        $end = $data['end'];
-        $query = $this->db->query('SELECT lat,lon,id,jenis_id
+        if(key_exists('start',$data) && key_exists('end',$data)){
+            $start = $data['start'];
+            $end = $data['end'];
+
+            $query = $this->db->query('SELECT lat,lon,id,jenis_id,percobaan
             FROM location 
             WHERE (id >= ' .$start. ' and  id <= '.$end.' )
              or 
              (jenis_id = 6 
-             and (id <1000 or id > 1350))')->result();
+             and (id <1000 or (id > 1356 and id < 1369 )  or  id > 1400))')->result();
+        }
+        else{
+            $pcb = $data['percobaan'];
+
+            $query = $this->db->query('SELECT lat,lon,id,jenis_id,percobaan
+            FROM location 
+            WHERE (percobaan = '.$pcb.' )
+             or 
+             (jenis_id = 6 
+             and (id <1000 or (id > 1356 and id < 1367 )  or id > 1400))')->result();
+        }
+       
         return $query;
     }
 
@@ -129,6 +145,5 @@ class Acc_Model extends CI_Model {
             FROM location where id > 900')->result();
         return $query;
     }
-
 }
  

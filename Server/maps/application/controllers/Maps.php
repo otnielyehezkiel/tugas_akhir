@@ -187,12 +187,12 @@ class Maps extends CI_Controller{
 		if($this->input->get('start') != null && $this->input->get('end') != null){
 			$cdata['start'] = $this->input->get('start');
 			$cdata['end'] = $this->input->get('end');
-		} else {
-			$cdata['start'] = '1096';
-			$cdata['end'] = '1111';
+		} elseif($this->input->get('pcb') != null){
+			$cdata['percobaan'] = $this->input->get('pcb');
 		}
+		else $cdata['percobaan'] = 1;
 		$key =0;
-		if($this->input->get('key')!=null){
+		if($this->input->get('key') != null){
 			$key = $this->input->get('key');
 		}
 		
@@ -224,7 +224,7 @@ class Maps extends CI_Controller{
 				        url:'".base_url('/maps/addToCsv?id='.$row->id)."',
 				        success: function(response) {
 				            g.updateOptions({ 
-							    'file': 'http://128.199.235.115/project/assets/images/file.csv'
+							    'file': 'http://128.199.232.180/project/assets/images/file.csv'
 							});
 						    $('#myModal').modal();
 							$(document).ready(function () {
@@ -247,6 +247,72 @@ class Maps extends CI_Controller{
        
         $data['map'] = $this->googlemaps->create_map();
         $this->load->view('percobaan',$data);	
+	}
+
+	public function percobaan2(){
+		if($this->input->get('start') != null && $this->input->get('end') != null){
+			$cdata['start'] = $this->input->get('start');
+			$cdata['end'] = $this->input->get('end');
+		} elseif($this->input->get('pcb') != null){
+			$cdata['percobaan'] = $this->input->get('pcb');
+		}
+		else $cdata['percobaan'] = 1;
+		$key =0;
+		if($this->input->get('key') != null){
+			$key = $this->input->get('key');
+		}
+		
+		$loc = $this->acc_model->getPercobaan($cdata);
+
+		$this->load->library('googlemaps');
+        $config['center'] = '-7.2859516, 112.795845';
+        $config['zoom'] = '15';
+        $config['map_height'] = '550px';
+        $config['maxzoom'] = '20';
+        $config['onclick'] = 'document.getElementById(\'coor\').innerHTML=
+        	\'Posisi: \' + parseFloat(event.latLng.lat()).toFixed(9) + \', \' +
+        	parseFloat(event.latLng.lng()).toFixed(9);';
+        $this->googlemaps->initialize($config);
+
+		
+		$marker = array();
+	   	foreach ($loc as $row){
+	   		if($row->jenis_id == 3 || $row->jenis_id == 4){
+	   			if($row->jenis_id ==3){
+	   				$marker['icon'] = base_url('/assets/images/bump_marker.png');
+	   			} else {
+	   				if($key == 1) continue;
+	   				$marker['icon'] = base_url('/assets/images/bump_marker.png');
+	   			}
+	   			$marker['ondblclick'] = "
+					$.ajax({
+				        type:'GET',
+				        url:'".base_url('/maps/addToCsv?id='.$row->id)."',
+				        success: function(response) {
+				            g.updateOptions({ 
+							    'file': 'http://128.199.232.180/project/assets/images/file.csv'
+							});
+						    $('#myModal').modal();
+							$(document).ready(function () {
+								g.resize(500, 200);
+					    	});
+				        }
+				    });
+				";
+	   		}
+	   		else {
+	   			$marker['icon'] = base_url('/assets/images/true_bump.png');
+	   		}
+	   		$marker['position'] = "{$row->lat}, {$row->lon}";
+			$marker['infowindow_content'] = "Bump <br><i>id={$row->id}</i>";
+			$marker['draggable'] = FALSE;
+
+			$this->googlemaps->add_marker($marker);
+        }
+
+       
+        $data['map'] = $this->googlemaps->create_map();
+        $this->load->view('percobaan2',$data);	
 	}
 
 	public function test(){
